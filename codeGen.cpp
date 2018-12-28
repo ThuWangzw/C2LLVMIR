@@ -6,6 +6,7 @@
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Support/raw_ostream.h>
 #include <iostream>
+#include "context.h"
 #include "AST.h"
 using namespace std;
 using namespace llvm;
@@ -56,4 +57,29 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
         default:
             return LogErrorV("invalid binary operator");
     }
+}
+
+llvm::Function* FunctionDecAST::codeGen(Context* context){
+    //args
+    std::vector<Type *> argtypes;
+    for(vector::iterator iter = this->args.begin(); iter != this->args.end(); iter++){
+        pair<int, string> one = (*iter);
+        if(pair.first == TYPE_INT){
+            argtypes.push( Type::getInt32Ty(context->llvmContext));
+        }
+        else if(pair.first == TYPE_CHAR){
+            argtypes.push( Type::getInt8Ty(context->llvmContext));
+        }
+    }
+    //ret type
+    Type *rettype;
+    if(rettype == TYPE_INT){
+        rettype = Type::getInt32Ty(context->llvmContext);
+    }
+    else if(rettype == TYPE_CHAR){
+        rettype = Type::getInt8Ty(context->llvmContext);
+    }
+    //create func
+    FunctionType *FT = FunctionType::get(rettype, argtypes, false);
+    return Function *F = Function::Create(FT, Function::ExternalLinkage, this->name, context->theModule.get());
 }
