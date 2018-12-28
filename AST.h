@@ -14,11 +14,20 @@
 #define BINARY_OPT_LE 10 //<=
 #define BINARY_OPT_GE 11 //>=
 
+#define TYPE_INT 0
+#define TYPE_CHAR 1
 #include <llvm/IR/Value.h>
 #include <iostream>
+<<<<<<< HEAD
 #include <string>
 #include "context.h"
 
+=======
+#include <map>
+#include <string>
+#include <utility>
+class Context;
+>>>>>>> caef32f3cfdb66fa7453fa8246d0ed2da688fddd
 int LogError(const char* errstr);
 llvm::Value* LogErrorV(const char* errstr);
 
@@ -75,6 +84,7 @@ public:
     virtual llvm::Value* codeGen(Context* context);
 };
 
+<<<<<<< HEAD
 //Indentifier
 class IdentifierExpAST:public ExpAST{
 private:
@@ -84,5 +94,27 @@ public:
     virtual llvm::Value* codeGen(Context* context);
 }
 
+=======
+class BlockAST:public ExpAST{
+private:
+    std::stack<AST*> stmsAndExps;
+    std::map<std::string,llvm::Value*> symboltable;
+public:
+    BlockAST(){}
+    ~BlockAST(){}
+    bool addAST(AST*);
+    bool addSymbol(const std::string&,const llvm::Value*);
+    llvm::Value *getSymbol(const std::string&);
+    virtual llvm::Value* codeGen(Context* context){return nullptr;}
+};
+>>>>>>> caef32f3cfdb66fa7453fa8246d0ed2da688fddd
 
+class FunctionDecAST:public StmAST{
+private:
+    std::string name;
+    int ret;//return value type
+    std::vector<std::pair<int,std::string>> args;//first type, second name
+public:
+    virtual llvm::Function *codeGen(Context* context);
+};
 #endif //C2LLVMIR_AST_H

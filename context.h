@@ -6,11 +6,14 @@
 #include <llvm/IR/Module.h>
 #include <llvm/Support/raw_ostream.h>
 #include <memory>
+#include <stack>
+#include "AST.h"
 class Context{
 public:
     llvm::LLVMContext llvmContext;
     llvm::IRBuilder<> builder;
     std::unique_ptr<llvm::Module> theModule;
+    std::stack<BlockAST*> blockstack;
     Context():builder(llvmContext){
         this->theModule = llvm::make_unique<llvm::Module>("c model", this->llvmContext);
     }
