@@ -16,6 +16,7 @@
 
 #include <llvm/IR/Value.h>
 #include <iostream>
+#include <string>
 #include "context.h"
 
 int LogError(const char* errstr);
@@ -39,9 +40,11 @@ class StmAST:public AST{
 public:
     StmAST(){}
     ~StmAST(){}
-    virtual llvm::Value* codeGen(Context* context);
+    virtual llvm::Value* codeGen(Context* context){ return nullptr;};
 };
 
+//Type Node
+//Int
 class IntExpAST:public ExpAST{
 private:
     int value;
@@ -50,6 +53,16 @@ public:
     ~IntExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
 };
+
+//Char
+class CharExpAST:public ExpAST{
+private:
+    char value;
+public:
+    CharExpAST(char t_value):value(t_value){}
+    ~CharExpAST(){}
+    virtual llvm::Value* codeGen(Context* context);
+}
 
 class BinaryOptExpAST:public ExpAST{
 private:
@@ -61,6 +74,15 @@ public:
     ~BinaryOptExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
 };
+
+//Indentifier
+class IdentifierExpAST:public ExpAST{
+private:
+    std::string name;
+public:
+    IdentifierExpAST(std::string t_name):name(t_name){}
+    virtual llvm::Value* codeGen(Context* context);
+}
 
 
 #endif //C2LLVMIR_AST_H
