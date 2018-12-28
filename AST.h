@@ -18,16 +18,12 @@
 #define TYPE_CHAR 1
 #include <llvm/IR/Value.h>
 #include <iostream>
-<<<<<<< HEAD
-#include <string>
-#include "context.h"
-
-=======
 #include <map>
 #include <string>
 #include <utility>
 class Context;
->>>>>>> caef32f3cfdb66fa7453fa8246d0ed2da688fddd
+
+
 int LogError(const char* errstr);
 llvm::Value* LogErrorV(const char* errstr);
 
@@ -84,7 +80,6 @@ public:
     virtual llvm::Value* codeGen(Context* context);
 };
 
-<<<<<<< HEAD
 //Indentifier
 class IdentifierExpAST:public ExpAST{
 private:
@@ -94,10 +89,9 @@ public:
     virtual llvm::Value* codeGen(Context* context);
 }
 
-=======
 class BlockAST:public ExpAST{
 private:
-    std::stack<AST*> stmsAndExps;
+    std::vector<AST*> stmsAndExps;
     std::map<std::string,llvm::Value*> symboltable;
 public:
     BlockAST(){}
@@ -105,9 +99,8 @@ public:
     bool addAST(AST*);
     bool addSymbol(const std::string&,const llvm::Value*);
     llvm::Value *getSymbol(const std::string&);
-    virtual llvm::Value* codeGen(Context* context){return nullptr;}
+    virtual llvm::Value* codeGen(Context* context);
 };
->>>>>>> caef32f3cfdb66fa7453fa8246d0ed2da688fddd
 
 class FunctionDecAST:public StmAST{
 private:
