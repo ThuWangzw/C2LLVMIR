@@ -10,6 +10,10 @@ int main(){
     IntExpAST *intast4 = new IntExpAST(6);
     BinaryOptExpAST *bin1 = new BinaryOptExpAST(BINARY_OPT_MULTI,intast3, intast4);
 
+    IntExpAST *intast7 = new IntExpAST(7);
+    IntExpAST *intast8 = new IntExpAST(8);
+    BinaryOptExpAST *bin2 = new BinaryOptExpAST(BINARY_OPT_MULTI,intast7, intast8);
+
     FunctionDecAST *func1 = new FunctionDecAST();
     func1->setName(std::string("test"));
     func1->setType(TYPE_INT);
@@ -17,6 +21,7 @@ int main(){
     //func->addArg(TYPE_INT,std::string("arg2"));
     BlockAST *block1 = new BlockAST();
     block1->addAST(bin1);
+    block1->addAST(bin2);
 
     FunctionDefAST *funcdef1 = new FunctionDefAST(func1, block1);
 
