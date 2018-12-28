@@ -5,9 +5,12 @@
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/IR/Verifier.h>
 #include <iostream>
 #include "context.h"
 #include "AST.h"
+
+
 using namespace std;
 using namespace llvm;
 
@@ -15,10 +18,22 @@ int LogError(const char* errstr){
     cout<<errstr<<endl;
     return 0;
 }
+
 llvm::Value* LogErrorV(const char* errstr){
     LogError(errstr);
     return nullptr;
 }
+
+llvm::Type*  getType(int typeidt, Context* context){
+    if(typeidt == TYPE_INT){
+        return Type::getInt32Ty(context->llvmContext);
+    }
+    if(typeidt == TYPE_CHAR){
+        return Type::getInt8Ty(context->llvmContext);
+    }
+    return nullptr;
+}
+
 Value* IntExpAST::codeGen(Context* context) {
     return ConstantInt::get(Type::getInt32Ty(context->llvmContext), this->value, true);
 }
@@ -64,24 +79,24 @@ llvm::Function* FunctionDecAST::codeGen(Context* context){
     std::vector<Type *> argtypes;
     for(vector<std::pair<int,std::string>>::iterator iter = this->args.begin(); iter != this->args.end(); iter++){
         pair<int, string> one = (*iter);
-        if(one.first == TYPE_INT){
-            argtypes.push_back( Type::getInt32Ty(context->llvmContext));
-        }
-        else if(one.first == TYPE_CHAR){
-            argtypes.push_back( Type::getInt8Ty(context->llvmContext));
-        }
+        argtypes.push_back( getType(one.first,context));
     }
     //ret type
     Type *rettype;
-    if(ret == TYPE_INT){
-        rettype = Type::getInt32Ty(context->llvmContext);
-    }
-    else if(ret == TYPE_CHAR){
-        rettype = Type::getInt8Ty(context->llvmContext);
-    }
+    rettype = getType(this->ret,context);
     //create func
     FunctionType *FT = FunctionType::get(rettype, argtypes, false);
-    return Function::Create(FT, Function::ExternalLinkage, this->name, context->theModule.get());
+    Function* res =Function::Create(FT, Function::ExternalLinkage, this->name, context->theModule.get());
+    int i = 0;
+    for(auto &arg:res->args()){
+        arg.setName(this->args[i].second);
+        i++;
+    }
+    if(res== nullptr){
+        LogErrorV("declare error!!!");
+        return nullptr;
+    }
+    return res;
 }
 
 void FunctionDecAST::setType(int tret){
@@ -99,18 +114,56 @@ void FunctionDecAST::setName(std::string tname){
     return;
 }
 
-llvm::Value* FunctionDefAST::codeGen(Context* context){
-    Function *TheFunction = context->theModule->getFunction(this->declare->name);
-    if (!TheFunction)
-        TheFunction = this->declare->codegen();
-    if (!TheFunction)
+llvm::Function* FunctionDefAST::codeGen(Context* context){
+    //handle declare
+    Function *func = context->theModule->getFunction(this->declare->name);
+    if(!func){
+        func = this->declare->codeGen(context);
+    }
+    if(func == nullptr)
     {
-        LogErrorV("function declare codegen error!");
+        cout<<func;
+        LogErrorV("function declaration error");
+        cout<<func;
         return nullptr;
     }
     //add block
     this->body->setName("entry");
-    this->body->setLocalVariable(this->declare->args);
-    context->blockstack.push
-    this->body->codeGen(context);
+    this->body->setFunc(func);
+    Value* retres = this->body->codeGen(context);
+    if(retres){
+        context->builder.CreateRet(retres);
+        llvm::verifyFunction(*func);
+        return func;
+    } else{
+        func->eraseFromParent();
+        return nullptr;
+    }
+    return nullptr;
+}
+
+llvm::Value* BlockAST::codeGen(Context* context){
+    //set var name and value
+    for (auto &Arg : this->func->args()){
+        this->symboltable[Arg.getName().data()] = &Arg;
+    }
+    Value* retval = nullptr;
+    BasicBlock *BB = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
+    context->builder.SetInsertPoint(BB);
+    context->blockstack.push(this);
+    for(vector<AST*>::iterator iter = this->stmsAndExps.begin(); iter != this->stmsAndExps.end(); iter++){
+        AST* now = *iter;
+        retval = now->codeGen(context);
+    }
+    context->blockstack.pop();
+    return retval;
+}
+
+void BlockAST::setFunc(llvm::Function* parent){
+    this->func = parent;
+}
+
+bool BlockAST::addAST(AST* one){
+    this->stmsAndExps.push_back(one);
+    return true;
 }
