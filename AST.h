@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 class Context;
+class FunctionDefAST;
 int LogError(const char* errstr);
 llvm::Value* LogErrorV(const char* errstr);
 
@@ -43,7 +44,7 @@ class StmAST:public AST{
 public:
     StmAST(){}
     ~StmAST(){}
-    virtual llvm::Value* codeGen(Context* context);
+    virtual llvm::Value* codeGen(Context* context){return nullptr;}
 };
 
 class IntExpAST:public ExpAST{
@@ -68,6 +69,7 @@ public:
 
 class BlockAST:public ExpAST{
 private:
+    std::string blockName;
     std::stack<AST*> stmsAndExps;
     std::map<std::string,llvm::Value*> symboltable;
 public:
@@ -77,6 +79,10 @@ public:
     bool addSymbol(const std::string&,const llvm::Value*);
     llvm::Value *getSymbol(const std::string&);
     virtual llvm::Value* codeGen(Context* context){return nullptr;}
+    void addSymbol();
+    llvm::Value* getSymbol(std::string);
+    void setName(const std::string newname);
+    void setLocalVariable(const std::vector<std::pair<int,std::string>>& args);
 };
 
 class FunctionDecAST:public StmAST{
@@ -84,7 +90,23 @@ private:
     std::string name;
     int ret;//return value type
     std::vector<std::pair<int,std::string>> args;//first type, second name
+    friend class FunctionDefAST;
 public:
+    FunctionDecAST(){}
     virtual llvm::Function *codeGen(Context* context);
+    void setName(std::string tname);
+    void setType(int tret);
+    void addArg(int rettype, std::string name);
+};
+
+class FunctionDefAST:public ExpAST{
+private:
+    FunctionDecAST *declare;
+    BlockAST *body;
+public:
+    FunctionDecAST(){}
+    FunctionDecAST(FunctionDecAST* tdec, BlockAST* tblo):declare(tdec), body(tblo){}
+    ~FunctionDecAST(){}
+    virtual llvm::Value* codeGen(Context* context);
 };
 #endif //C2LLVMIR_AST_H

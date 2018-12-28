@@ -62,24 +62,55 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
 llvm::Function* FunctionDecAST::codeGen(Context* context){
     //args
     std::vector<Type *> argtypes;
-    for(vector::iterator iter = this->args.begin(); iter != this->args.end(); iter++){
+    for(vector<std::pair<int,std::string>>::iterator iter = this->args.begin(); iter != this->args.end(); iter++){
         pair<int, string> one = (*iter);
-        if(pair.first == TYPE_INT){
-            argtypes.push( Type::getInt32Ty(context->llvmContext));
+        if(one.first == TYPE_INT){
+            argtypes.push_back( Type::getInt32Ty(context->llvmContext));
         }
-        else if(pair.first == TYPE_CHAR){
-            argtypes.push( Type::getInt8Ty(context->llvmContext));
+        else if(one.first == TYPE_CHAR){
+            argtypes.push_back( Type::getInt8Ty(context->llvmContext));
         }
     }
     //ret type
     Type *rettype;
-    if(rettype == TYPE_INT){
+    if(ret == TYPE_INT){
         rettype = Type::getInt32Ty(context->llvmContext);
     }
-    else if(rettype == TYPE_CHAR){
+    else if(ret == TYPE_CHAR){
         rettype = Type::getInt8Ty(context->llvmContext);
     }
     //create func
     FunctionType *FT = FunctionType::get(rettype, argtypes, false);
-    return Function *F = Function::Create(FT, Function::ExternalLinkage, this->name, context->theModule.get());
+    return Function::Create(FT, Function::ExternalLinkage, this->name, context->theModule.get());
+}
+
+void FunctionDecAST::setType(int tret){
+    this->ret = tret;
+    return;
+}
+
+void FunctionDecAST::addArg(int rettype, std::string name){
+    this->args.push_back(make_pair(rettype,name));
+    return;
+}
+
+void FunctionDecAST::setName(std::string tname){
+    this->name.assign(tname);
+    return;
+}
+
+llvm::Value* FunctionDefAST::codeGen(Context* context){
+    Function *TheFunction = context->theModule->getFunction(this->declare->name);
+    if (!TheFunction)
+        TheFunction = this->declare->codegen();
+    if (!TheFunction)
+    {
+        LogErrorV("function declare codegen error!");
+        return nullptr;
+    }
+    //add block
+    this->body->setName("entry");
+    this->body->setLocalVariable(this->declare->args);
+    context->blockstack.push
+    this->body->codeGen(context);
 }
