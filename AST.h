@@ -80,7 +80,8 @@ private:
     std::map<std::string,llvm::Value*> symboltable;
     llvm::Function* func;
 public:
-    BlockAST(){}
+    BlockAST():func(nullptr){}
+    BlockAST(std::string str):blockName(str), func(nullptr){}
     ~BlockAST(){}
     bool addAST(AST* one);
     bool addSymbol(const std::string&,const llvm::Value*);
@@ -113,5 +114,16 @@ public:
     FunctionDefAST(FunctionDecAST* tdec, BlockAST* tblo):declare(tdec), body(tblo){}
     ~FunctionDefAST(){}
     virtual llvm::Function* codeGen(Context* context);
+};
+
+class FunctionCallAST:public ExpAST{
+private:
+    std::string name;
+    std::vector<ExpAST*> args;
+public:
+    FunctionCallAST(std::string nname):name(nname){}
+    ~FunctionCallAST(){}
+    void addArg(ExpAST* arg);
+    virtual llvm::Value* codeGen(Context* context);
 };
 #endif //C2LLVMIR_AST_H

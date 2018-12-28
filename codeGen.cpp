@@ -144,12 +144,15 @@ llvm::Function* FunctionDefAST::codeGen(Context* context){
 
 llvm::Value* BlockAST::codeGen(Context* context){
     //set var name and value
-    for (auto &Arg : this->func->args()){
-        this->symboltable[Arg.getName().data()] = &Arg;
+    Value* retval;
+    if(this->func != nullptr){
+        for (auto &Arg : this->func->args()){
+            this->symboltable[Arg.getName().data()] = &Arg;
+        }
+        retval = nullptr;
+        BasicBlock *BB = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
+        context->builder.SetInsertPoint(BB);
     }
-    Value* retval = nullptr;
-    BasicBlock *BB = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
-    context->builder.SetInsertPoint(BB);
     context->blockstack.push(this);
     for(vector<AST*>::iterator iter = this->stmsAndExps.begin(); iter != this->stmsAndExps.end(); iter++){
         AST* now = *iter;
@@ -166,4 +169,25 @@ void BlockAST::setFunc(llvm::Function* parent){
 bool BlockAST::addAST(AST* one){
     this->stmsAndExps.push_back(one);
     return true;
+}
+
+void FunctionCallAST::addArg(ExpAST *arg){
+    this->args.push_back(arg);
+}
+
+llvm::Value* FunctionCallAST::codeGen(Context* context){
+    // Look up the name in the global module table.
+    Function *CalleeF = context->theModule->getFunction(name);
+    if (!CalleeF)
+        return LogErrorV("Unknown function referenced");
+    // If argument mismatch error.
+    if (CalleeF->arg_size() != this->args.size())
+        return LogErrorV("Incorrect # arguments passed");
+    std::vector<Value *> ArgsV;
+    for (unsigned i = 0, e = this->args.size(); i != e; ++i) {
+        ArgsV.push_back(this->args[i]->codeGen(context));
+        if (!ArgsV.back())
+            return nullptr;
+    }
+    return context->builder.CreateCall(CalleeF, ArgsV, "call");
 }
