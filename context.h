@@ -18,7 +18,7 @@ public:
     std::unique_ptr<llvm::Module> theModule;
     std::stack<BlockAST*> blockstack;
     //get Symbol
-    Value* getSymbol(std::string& t_name){
+    llvm::Value* getSymbol(std::string& t_name){
         return blockstack.top() -> getSymbol(t_name);
     }
     //add Symbol
