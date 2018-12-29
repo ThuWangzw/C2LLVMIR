@@ -8,12 +8,23 @@
 #include <memory>
 #include <stack>
 #include "AST.h"
+#include <iostream>
+#include <string>
+
 class Context{
 public:
     llvm::LLVMContext llvmContext;
     llvm::IRBuilder<> builder;
     std::unique_ptr<llvm::Module> theModule;
     std::stack<BlockAST*> blockstack;
+    //get Symbol
+    Value* getSymbol(std::string& t_name){
+        return blockstack.top() -> getSymbol(t_name);
+    }
+    //add Symbol
+    bool addSymbol(const std::string& t_name,const llvm::Value* t_value){
+        return blockstack.top() -> addSymbol(t_name,t_value);
+    }
     Context():builder(llvmContext){
         this->theModule = llvm::make_unique<llvm::Module>("c model", this->llvmContext);
     }
