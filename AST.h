@@ -1,31 +1,15 @@
 #ifndef C2LLVMIR_AST_H
 #define C2LLVMIR_AST_H
 
-#define BINARY_OPT_PLUS 0
-#define BINARY_OPT_MINUS 1
-#define BINARY_OPT_MULTI 2
-#define BINARY_OPT_DIV 3
-#define BINARY_OPT_AND 4
-#define BINARY_OPT_OR 5
-#define BINARY_OPT_EQ 6
-#define BINARY_OPT_NE 7
-#define BINARY_OPT_LT 8 //<
-#define BINARY_OPT_GT 9 //>
-#define BINARY_OPT_LE 10 //<=
-#define BINARY_OPT_GE 11 //>=
-
-#define TYPE_INT 0
-#define TYPE_CHAR 1
 #include <llvm/IR/Value.h>
 #include <iostream>
 #include <map>
 #include <string>
 #include <utility>
+#include "utils.h"
 class Context;
-
-
-int LogError(const char* errstr);
-llvm::Value* LogErrorV(const char* errstr);
+class FunctionDefAST;
+llvm::Type*  getType(int typeidt, Context* context);
 
 class AST{
 public:
@@ -45,7 +29,7 @@ class StmAST:public AST{
 public:
     StmAST(){}
     ~StmAST(){}
-    virtual llvm::Value* codeGen(Context* context){ return nullptr;};
+    virtual llvm::Value* codeGen(Context* context){ return nullptr;}
 };
 
 //Type Node
@@ -67,7 +51,7 @@ public:
     CharExpAST(char t_value):value(t_value){}
     ~CharExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
-}
+};
 
 class BinaryOptExpAST:public ExpAST{
 private:
@@ -87,19 +71,24 @@ private:
 public:
     IdentifierExpAST(std::string t_name):name(t_name){}
     virtual llvm::Value* codeGen(Context* context);
-}
+};
 
 class BlockAST:public ExpAST{
 private:
+    std::string blockName;
     std::vector<AST*> stmsAndExps;
     std::map<std::string,llvm::Value*> symboltable;
+    llvm::Function* func;
 public:
-    BlockAST(){}
+    BlockAST():func(nullptr){}
+    BlockAST(std::string str):blockName(str), func(nullptr){}
     ~BlockAST(){}
-    bool addAST(AST*);
+    bool addAST(AST* one);
     bool addSymbol(const std::string&,const llvm::Value*);
     llvm::Value *getSymbol(const std::string&);
     virtual llvm::Value* codeGen(Context* context);
+    void setName(const std::string newname){blockName.assign(newname);};
+    void setFunc(llvm::Function* parent);
 };
 
 class FunctionDecAST:public StmAST{
@@ -107,7 +96,34 @@ private:
     std::string name;
     int ret;//return value type
     std::vector<std::pair<int,std::string>> args;//first type, second name
+    friend class FunctionDefAST;
 public:
+    FunctionDecAST(){}
     virtual llvm::Function *codeGen(Context* context);
+    void setName(std::string tname);
+    void setType(int tret);
+    void addArg(int rettype, std::string name);
+};
+
+class FunctionDefAST:public ExpAST{
+private:
+    FunctionDecAST *declare;
+    BlockAST *body;
+public:
+    FunctionDefAST(){}
+    FunctionDefAST(FunctionDecAST* tdec, BlockAST* tblo):declare(tdec), body(tblo){}
+    ~FunctionDefAST(){}
+    virtual llvm::Function* codeGen(Context* context);
+};
+
+class FunctionCallAST:public ExpAST{
+private:
+    std::string name;
+    std::vector<ExpAST*> args;
+public:
+    FunctionCallAST(std::string nname):name(nname){}
+    ~FunctionCallAST(){}
+    void addArg(ExpAST* arg);
+    virtual llvm::Value* codeGen(Context* context);
 };
 #endif //C2LLVMIR_AST_H
