@@ -134,7 +134,7 @@ class IfExpAST:public ExpAST{
 private:
     ExpAST* Cond;//needed
     BlockAST* Then;//needed
-    BlockAST* Else;//needed
+    BlockAST* Else;//needed maybe nullptr
     BlockAST* Merge;
 public:
     IfExpAST(ExpAST* nCond, BlockAST* nThen, BlockAST* nElse):Cond(nCond), Then(nThen), Else(nElse){}

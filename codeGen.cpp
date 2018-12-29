@@ -213,6 +213,11 @@ llvm::Value* IfExpAST::codeGen(Context* context){
     this->Then->setFunc(TheFunction);
     this->Then->setName("then");
     BasicBlock* thenbb = this->Then->BBCreate(context);
+    if(this->Else== nullptr){
+        this->Else = new BlockAST();
+        IntExpAST *tmp = new IntExpAST(-1);
+        this->Else->addAST(tmp);
+    }
     this->Else->setName("else");
     BasicBlock* elsebb = this->Else->BBCreate(context);
     this->Merge = new BlockAST();
@@ -233,13 +238,6 @@ llvm::Value* IfExpAST::codeGen(Context* context){
     // Emit else block.
     TheFunction->getBasicBlockList().push_back(elsebb);
     Value *ElseV = this->Else->codeGen(context);
-    if (!ElseV)
-    {
-        LogErrorV("else error");
-        return nullptr;
-
-    }
-
     context->builder.CreateBr(mergebb);
     // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
     elsebb = context->builder.GetInsertBlock();

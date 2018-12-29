@@ -44,7 +44,7 @@ int main(){
     IntExpAST *intast81 = new IntExpAST(2);
     BinaryOptExpAST *bin3 = new BinaryOptExpAST(BINARY_OPT_MULTI,intast71, intast81);
 
-    IfExpAST* ifexp = new IfExpAST(bin3, thenblock, elseblock);
+    IfExpAST* ifexp = new IfExpAST(bin3, thenblock, nullptr);
 
     IntExpAST *intast = new IntExpAST(1);
     IntExpAST *intast2 = new IntExpAST(2);
