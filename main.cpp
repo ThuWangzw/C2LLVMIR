@@ -33,7 +33,7 @@ int main(){
     IntExpAST *intast52 = new IntExpAST(4);
     funccall2->addArg(intast52);
 
-
+//if
     BlockAST* thenblock = new BlockAST();
     thenblock->addAST(funccall1);
 
@@ -44,7 +44,18 @@ int main(){
     IntExpAST *intast81 = new IntExpAST(2);
     BinaryOptExpAST *bin3 = new BinaryOptExpAST(BINARY_OPT_MULTI,intast71, intast81);
 
-    IfExpAST* ifexp = new IfExpAST(bin3, thenblock, nullptr);
+    IfExpAST* ifexp = new IfExpAST(bin3, thenblock, elseblock);
+//
+//for
+    IntExpAST *forinit = new IntExpAST(1);
+    IntExpAST *forcond = new IntExpAST(1);
+    IntExpAST *forincre = new IntExpAST(1);
+    IntExpAST *forint1 = new IntExpAST(1);
+    IntExpAST *forint2 = new IntExpAST(2);
+    BinaryOptExpAST *forins = new BinaryOptExpAST(BINARY_OPT_MULTI, forint1, forint2);
+    BlockAST* forblock = new BlockAST();
+    forblock->addAST(forins);
+    ForExpAST* forexp = new ForExpAST(forinit, forcond, forincre, forblock);
 
     IntExpAST *intast = new IntExpAST(1);
     IntExpAST *intast2 = new IntExpAST(2);
@@ -54,10 +65,13 @@ int main(){
     func->setName(std::string("main"));
     func->setType(TYPE_INT);
     func->addArg(TYPE_INT,std::string("arg1"));
+    BlockAST* block2 = new BlockAST("okok");
+    block2->addAST(ifexp);
     //func->addArg(TYPE_INT,std::string("arg2"));
     BlockAST *block = new BlockAST("en");
-    block->addAST(ifexp);
-    block->addAST(bin);
+    block->addAST(forexp);
+    //block->addAST(block2);
+    //block->addAST(bin);
 //
     FunctionDefAST *funcdef = new FunctionDefAST(func, block);
 //

@@ -141,4 +141,14 @@ public:
     ~IfExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
 };
+
+class ForExpAST:public ExpAST{
+private:
+    ExpAST* init, *cond, *incre;//needed, can be nullptr
+    BlockAST* block;//needed
+public:
+    ForExpAST(ExpAST* ninit, ExpAST* ncond, ExpAST* nincre, BlockAST* nblock):init(ninit), cond(ncond), incre(nincre), block(nblock){}
+    ~ForExpAST(){}
+    virtual llvm::Value* codeGen(Context* context);
+};
 #endif //C2LLVMIR_AST_H
