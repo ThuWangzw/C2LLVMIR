@@ -4,11 +4,11 @@ OBJS =  codeGen.o \
 		main.o	 \
 
 LLVMCONFIG = llvm-config
-CPPFLAGS = -g -O3 `$(LLVMCONFIG) --cppflags --ldflags`
+CPPFLAGS = `$(LLVMCONFIG) --cxxflags --ldflags`
 LIBS = `$(LLVMCONFIG) --system-libs --libs core`
 
 clean:
-	$(RM) -rf $(OBJS)
+	$(RM) -rf $(OBJS) compiler
 
 
 %.o: %.cpp

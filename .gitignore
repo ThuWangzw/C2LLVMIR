@@ -1,3 +1,6 @@
 .idea
 *.o
 compiler
+main.cpp
+test.*
+*.out
