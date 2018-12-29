@@ -247,7 +247,7 @@ llvm::Value* IfExpAST::codeGen(Context* context){
     // Emit merge block.
     TheFunction->getBasicBlockList().push_back(mergebb);
     context->builder.SetInsertPoint(mergebb);
-    PHINode *PN = context->builder.CreatePHI(Type::getDoubleTy(context->llvmContext), 2, "iftmp");
+    PHINode *PN = context->builder.CreatePHI(getType(TYPE_INT, context), 2, "iftmp");
 
     PN->addIncoming(ThenV, thenbb);
     PN->addIncoming(ElseV, elsebb);
