@@ -45,7 +45,8 @@ int main(){
     BinaryOptExpAST *bin3 = new BinaryOptExpAST(BINARY_OPT_MULTI,intast71, intast81);
 
     IfExpAST* ifexp = new IfExpAST(bin3, thenblock, elseblock);
-//
+//end if
+
 //for
     IntExpAST *forinit = new IntExpAST(1);
     IntExpAST *forcond = new IntExpAST(1);
@@ -56,6 +57,17 @@ int main(){
     BlockAST* forblock = new BlockAST();
     forblock->addAST(forins);
     ForExpAST* forexp = new ForExpAST(forinit, forcond, forincre, forblock);
+//end for
+//while
+    IntExpAST *whilecond = new IntExpAST(1);
+    IntExpAST *whileint1 = new IntExpAST(1);
+    IntExpAST *whileint2 = new IntExpAST(2);
+    BinaryOptExpAST *whileins = new BinaryOptExpAST(BINARY_OPT_MULTI, whileint1, whileint2);
+    BlockAST* whileblock = new BlockAST();
+    whileblock->addAST(whileins);
+    WhileExpAST* whileexp = new WhileExpAST(whilecond, whileblock);
+//end while
+
 
     IntExpAST *intast = new IntExpAST(1);
     IntExpAST *intast2 = new IntExpAST(2);
