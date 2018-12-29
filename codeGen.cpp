@@ -139,26 +139,31 @@ llvm::Function* FunctionDefAST::codeGen(Context* context){
         func->eraseFromParent();
         return nullptr;
     }
-    return nullptr;
 }
 
 llvm::Value* BlockAST::codeGen(Context* context){
     //set var name and value
-    Value* retval;
-    if(this->func != nullptr){
-        for (auto &Arg : this->func->args()){
-            this->symboltable[Arg.getName().data()] = &Arg;
+    Value* retval = nullptr;
+    if(!this->bbCreated){
+        if(this->func != nullptr){
+            for (auto &Arg : this->func->args()){
+                this->symboltable[Arg.getName().data()] = &Arg;
+            }
+            BasicBlock *BB = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
+            context->builder.SetInsertPoint(BB);
+        } else{
+            BasicBlock *BB = BasicBlock::Create(context->llvmContext, this->blockName);
+            context->builder.SetInsertPoint(BB);
         }
-        retval = nullptr;
-        BasicBlock *BB = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
-        context->builder.SetInsertPoint(BB);
+    } else{
+        context->builder.SetInsertPoint(this->bblock);
     }
-    context->blockstack.push(this);
+    context->blockstack.push_back(this);
     for(vector<AST*>::iterator iter = this->stmsAndExps.begin(); iter != this->stmsAndExps.end(); iter++){
         AST* now = *iter;
         retval = now->codeGen(context);
     }
-    context->blockstack.pop();
+    context->blockstack.pop_back();
     return retval;
 }
 
@@ -190,4 +195,82 @@ llvm::Value* FunctionCallAST::codeGen(Context* context){
             return nullptr;
     }
     return context->builder.CreateCall(CalleeF, ArgsV, "call");
+}
+
+llvm::Value* IfExpAST::codeGen(Context* context){
+    Value *CondV = this->Cond->codeGen(context);
+    if (!CondV)
+    {
+        LogErrorV("if condition exp error!");
+        return nullptr;
+    }
+    //if cond
+    CondV = context->builder.CreateICmpNE(
+            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "ifcond");
+    Function *TheFunction = context->builder.GetInsertBlock()->getParent();
+    // Create blocks for the then and else cases.  Insert the 'then' block at the
+    // end of the function.
+    this->Then->setFunc(TheFunction);
+    this->Then->setName("then");
+    BasicBlock* thenbb = this->Then->BBCreate(context);
+    this->Else->setName("else");
+    BasicBlock* elsebb = this->Else->BBCreate(context);
+    this->Merge = new BlockAST();
+    this->Merge->setName("ifcont");
+    BasicBlock* mergebb = this->Merge->BBCreate(context);
+    context->builder.CreateCondBr(CondV, thenbb, elsebb);
+    // Emit then value.
+    Value* ThenV = this->Then->codeGen(context);
+    if (!ThenV){
+        LogErrorV("then error");
+        return nullptr;
+
+    }
+    context->builder.CreateBr(mergebb);
+    // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
+    thenbb = context->builder.GetInsertBlock();
+
+    // Emit else block.
+    TheFunction->getBasicBlockList().push_back(elsebb);
+    Value *ElseV = this->Else->codeGen(context);
+    if (!ElseV)
+    {
+        LogErrorV("else error");
+        return nullptr;
+
+    }
+
+    context->builder.CreateBr(mergebb);
+    // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
+    elsebb = context->builder.GetInsertBlock();
+
+    // Emit merge block.
+    TheFunction->getBasicBlockList().push_back(mergebb);
+    context->builder.SetInsertPoint(mergebb);
+    PHINode *PN = context->builder.CreatePHI(Type::getDoubleTy(context->llvmContext), 2, "iftmp");
+
+    PN->addIncoming(ThenV, thenbb);
+    PN->addIncoming(ElseV, elsebb);
+    return PN;
+}
+
+llvm::BasicBlock* BlockAST::BBCreate(Context* context){
+    if(this->blockName.empty()){
+        if(this->func== nullptr){
+            this->bblock = BasicBlock::Create(context->llvmContext);
+            this->bbCreated = true;
+        } else{
+            this->bblock = BasicBlock::Create(context->llvmContext,"",this->func);
+            this->bbCreated = true;
+        }
+    } else{
+        if(this->func== nullptr){
+            this->bblock = BasicBlock::Create(context->llvmContext,this->blockName);
+            this->bbCreated = true;
+        } else{
+            this->bblock = BasicBlock::Create(context->llvmContext,this->blockName,this->func);
+            this->bbCreated = true;
+        }
+    }
+    return this->bblock;
 }

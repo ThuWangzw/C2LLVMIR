@@ -15,7 +15,7 @@ int main(){
     BinaryOptExpAST *bin2 = new BinaryOptExpAST(BINARY_OPT_MULTI,intast7, intast8);
 
     FunctionDecAST *func1 = new FunctionDecAST();
-    func1->setName(std::string("test"));
+    func1->setName(std::string("testfunc"));
     func1->setType(TYPE_INT);
     func1->addArg(TYPE_INT,std::string("arg1"));
     //func->addArg(TYPE_INT,std::string("arg2"));
@@ -25,9 +25,26 @@ int main(){
 
     FunctionDefAST *funcdef1 = new FunctionDefAST(func1, block1);
 
-    FunctionCallAST* funccall = new FunctionCallAST("test");
-    IntExpAST *intast5 = new IntExpAST(6);
-    funccall->addArg(intast5);
+    FunctionCallAST* funccall1 = new FunctionCallAST("testfunc");
+    IntExpAST *intast51 = new IntExpAST(3);
+    funccall1->addArg(intast51);
+
+    FunctionCallAST* funccall2 = new FunctionCallAST("testfunc");
+    IntExpAST *intast52 = new IntExpAST(4);
+    funccall2->addArg(intast52);
+
+
+    BlockAST* thenblock = new BlockAST();
+    thenblock->addAST(funccall1);
+
+    BlockAST* elseblock = new BlockAST();
+    elseblock->addAST(funccall2);
+
+    IntExpAST *intast71 = new IntExpAST(1);
+    IntExpAST *intast81 = new IntExpAST(2);
+    BinaryOptExpAST *bin3 = new BinaryOptExpAST(BINARY_OPT_MULTI,intast71, intast81);
+
+    IfExpAST* ifexp = new IfExpAST(bin3, thenblock, elseblock);
 
     IntExpAST *intast = new IntExpAST(1);
     IntExpAST *intast2 = new IntExpAST(2);
@@ -39,7 +56,7 @@ int main(){
     func->addArg(TYPE_INT,std::string("arg1"));
     //func->addArg(TYPE_INT,std::string("arg2"));
     BlockAST *block = new BlockAST("en");
-    block->addAST(funccall);
+    block->addAST(ifexp);
     block->addAST(bin);
 //
     FunctionDefAST *funcdef = new FunctionDefAST(func, block);
@@ -49,9 +66,7 @@ int main(){
     basic->addAST(funcdef);
 
     Value* res = basic->codeGen(ctx);
-    res->print(errs());
-
     cout<<endl;
-    //ctx->theModule->print(errs(), nullptr);
+    ctx->theModule->print(errs(), nullptr);
     return 0;
 }

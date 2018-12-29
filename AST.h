@@ -79,9 +79,11 @@ private:
     std::vector<AST*> stmsAndExps;
     std::map<std::string,llvm::Value*> symboltable;
     llvm::Function* func;
+    bool bbCreated;
+    llvm::BasicBlock* bblock;
 public:
-    BlockAST():func(nullptr){}
-    BlockAST(std::string str):blockName(str), func(nullptr){}
+    BlockAST():func(nullptr), bbCreated(false){}
+    BlockAST(std::string str):blockName(str), func(nullptr), bbCreated(false){}
     ~BlockAST(){}
     bool addAST(AST* one);
     bool addSymbol(const std::string&,const llvm::Value*);
@@ -89,6 +91,7 @@ public:
     virtual llvm::Value* codeGen(Context* context);
     void setName(const std::string newname){blockName.assign(newname);};
     void setFunc(llvm::Function* parent);
+    llvm::BasicBlock *BBCreate(Context* context);
 };
 
 class FunctionDecAST:public StmAST{
@@ -107,8 +110,8 @@ public:
 
 class FunctionDefAST:public ExpAST{
 private:
-    FunctionDecAST *declare;
-    BlockAST *body;
+    FunctionDecAST *declare;//needed
+    BlockAST *body;//needed
 public:
     FunctionDefAST(){}
     FunctionDefAST(FunctionDecAST* tdec, BlockAST* tblo):declare(tdec), body(tblo){}
@@ -118,12 +121,24 @@ public:
 
 class FunctionCallAST:public ExpAST{
 private:
-    std::string name;
-    std::vector<ExpAST*> args;
+    std::string name;//needed
+    std::vector<ExpAST*> args;//needed
 public:
     FunctionCallAST(std::string nname):name(nname){}
     ~FunctionCallAST(){}
     void addArg(ExpAST* arg);
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+class IfExpAST:public ExpAST{
+private:
+    ExpAST* Cond;//needed
+    BlockAST* Then;//needed
+    BlockAST* Else;//needed
+    BlockAST* Merge;
+public:
+    IfExpAST(ExpAST* nCond, BlockAST* nThen, BlockAST* nElse):Cond(nCond), Then(nThen), Else(nElse){}
+    ~IfExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
 };
 #endif //C2LLVMIR_AST_H
