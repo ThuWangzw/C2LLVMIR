@@ -15,6 +15,7 @@ class Context{
 public:
     llvm::LLVMContext llvmContext;
     llvm::IRBuilder<> builder;
+    llvm::Function* nowFunc;
     std::unique_ptr<llvm::Module> theModule;
     std::vector<BlockAST*> blockstack;
     //get Symbol
@@ -25,7 +26,7 @@ public:
     bool addSymbol(const std::string& t_name,const llvm::Value* t_value){
         //return blockstack.top() -> addSymbol(t_name,t_value);
     }
-    Context():builder(llvmContext){
+    Context():builder(llvmContext), nowFunc(nullptr){
         this->theModule = llvm::make_unique<llvm::Module>("c model", this->llvmContext);
     }
     ~Context(){}

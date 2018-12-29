@@ -76,12 +76,12 @@ int main(){
     FunctionDecAST *func = new FunctionDecAST();
     func->setName(std::string("main"));
     func->setType(TYPE_INT);
-    func->addArg(TYPE_INT,std::string("arg1"));
+   // func->addArg(TYPE_INT,std::string("arg1"));
     BlockAST* block2 = new BlockAST("okok");
     block2->addAST(ifexp);
     //func->addArg(TYPE_INT,std::string("arg2"));
-    BlockAST *block = new BlockAST("en");
-    block->addAST(forexp);
+    BlockAST *block = new BlockAST();
+    block->addAST(block2);
     //block->addAST(block2);
     //block->addAST(bin);
 //
