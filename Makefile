@@ -1,4 +1,4 @@
-all: compiler lex yacc
+all: lex yacc compiler 
 
 OBJS =  codeGen.o \
 		main.o	 \
@@ -10,16 +10,26 @@ LIBS = `$(LLVMCONFIG) --system-libs --libs core`
 
 clean:
 	$(RM) -rf $(OBJS) compiler
-	$(RM) -rf compiler.out y.tab.cpp y.tab.hpp lex.yy.cpp y.output
+	$(RM) -rf parser.out y.tab.cpp y.tab.hpp lex.yy.cpp y.output 
+	$(RM) -rf output.ll output.bc output.o output.out
 
 %.o: %.cpp
 	clang++ -fmodules -c $(CPPFLAGS) -o $@ $<
 
 lex:
-	lex -o lex.yy.cpp compiler.l
+	flex -o lex.yy.cpp compiler.l
 
 yacc:
 	yacc -dy -o y.tab.cpp -v compiler.y
 
+parser: lex yacc
+	clang++ -std=c++11 $(CPPFLAGS) $(LIBS) -o parser.out y.tab.cpp lex.yy.cpp AST.cpp codeGen.cpp parser.cpp
+
 compiler: $(OBJS)
-	clang++ $(CPPFLAGS) -o $@ $(OBJS) $(LIBS)
+	clang++ $(CPPFLAGS) -o $@ $(OBJS) $(LIBS) y.tab.cpp lex.yy.cpp
+
+output:
+	llvm-as output.ll
+	llc -filetype=obj output.bc
+	gcc output.o -o output.out
+	

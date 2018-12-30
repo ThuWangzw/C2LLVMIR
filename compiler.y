@@ -1,8 +1,8 @@
 %{
-	#include <stdio.h>
-	#include <stdlib.h>
 	#include "AST.h"
-	BlockAST* programBlock;
+	#include <stdio.h>
+	#include <cstdlib>
+	BlockAST* programBlock = nullptr;
 	extern char *yytext;
 	extern FILE * yyin;
 	extern FILE * yyout;
@@ -16,9 +16,15 @@
 	ExpAST* expression;
 	StmAST* statement;
 	FunctionDefAST* function_def;
+	FunctionDecAST* function_dec;
 	IdentifierExpAST* identifier;
+	FunctionCallAST* function_call;
+	/* VariableDeclaration* var_dec; */
 	std::string* name;
 	int token;
+	std::vector<std::pair<int,std::string>> *var_dec_list;
+	std::vector<ExpAST*> *call_list;
+	std::vector<AST*> *statement_list;
 }
 
 %token <name> IDENTIFIER CONSTANT CHAR_CONSTANT STRING_LITERAL
@@ -29,16 +35,24 @@
 %token <token> SEMICOLON LBRACE RBRACE COMMA ASSIGN LPAREN RPAREN LBRACKET RBRACKET
 %token <token> BIT_AND BIT_XOR BIT_OR BIT_NOT BIT_INVERSION MINUS PLUS MUL DIV MOD COM_L COM_G
 
-%type <block> program translation_unit external_declaration
+%type <block> program translation_unit external_declaration compound_statement expression_statement
+%type <statement> statement iteration_statement jump_statement selection_statement
+%type <statement_list> statement_list
 %type <function_def> function_definition
-%type <
+%type <function_dec> function_declaration
+%type <var_dec> variable_declaration
+%type <identifier> identifier
+%type <var_dec_list> func_decl_arguments declaration_list
+%type <token> type_specifier unary_operator
+%type <expression> primary_expression postfix_expression unary_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression expression 
+%type <call_list> argument_expression_list
 
 %start program
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 %%
-program: translation_unit {programBlock = $1}
+program: translation_unit {programBlock = $1;}
 	;
 
 /*开始解析单元*/
@@ -47,7 +61,9 @@ translation_unit: external_declaration { $$ = new BlockAST(); $$->addAST($1); }
 	;
 
 /*外部声明，函数定义或声明*/
-external_declaration: function_definition | variable_declaration SEMICOLON
+external_declaration: function_definition { $<function_def>$ = $1;}
+	| function_declaration { $<function_dec>$ = $1; }
+	| variable_declaration SEMICOLON { /*$<var_dec>$ = $1;*/ }
 	;
 
 /*变量声明*/
@@ -62,33 +78,38 @@ variable_declaration:
 	}
 	;
 
+/*函数声明*/
+function_declaration:
+	EXTERN type_specifier identifier LPAREN func_decl_arguments RPAREN SEMICOLON{
+		/* AS: extern int printf(char* format); */
+		/* add a field to tell whether it is extern*/
+		$$ = new FunctionDecAST();
+		$$->setName($3->getName());
+		$$->setType($2);
+		for (auto p = $5->begin(); p != $5->end(); p++) {
+			$$->addArg(p->first, p->second);
+		}
+	}
+	;
 /*函数定义*/
 function_definition:
 	type_specifier identifier LPAREN func_decl_arguments RPAREN compound_statement {
 		/* AS: int func(int a, char b){...} */
 		FunctionDecAST* func_dec = new FunctionDecAST();
-		func_dec->setName($2);
+		func_dec->setName($2->getName());
 		func_dec->setType($1);
-		/* need change */
-		/* func_dec->setArguments($4); */
+		for (auto p = $4->begin(); p != $4->end(); p++) {
+			func_dec->addArg(p->first, p->second);
+		}
 		$$ = new FunctionDefAST(func_dec, $6);
-	}
-	| EXTERN type_specifier identifier LPAREN func_decl_arguments RPAREN SEMICOLON{
-		/* AS: extern int printf(char* format); */
-
-		/* add a field to tell whether it is extern*/
-		$$ = new FunctionDecAST();
-		$$->setName($3);
-		$$->setType($2);
-		/* $$->setArguments($5); */
 	}
 	;
 
 /*函数声明的参数*/
 func_decl_arguments:
-	/* blank */ { /* $$ = new VariableList(); */}
-	| variable_declaration { /* $$ = new VariableList(); $$->push_back($1); */ }
-	| func_decl_arguments COMMA variable_declaration { /* $1->push_back($3) */}
+	/* blank */ { $$ = new std::vector<std::pair<int,std::string>>();}
+	| variable_declaration { /*$$ = new std::vector<std::pair<int,std::string>>(); $$->push_back($1);*/ }
+	| func_decl_arguments COMMA variable_declaration { /*$1->push_back($3);*/ }
 	;
 
 /*调用函数参数列表*/
@@ -108,9 +129,9 @@ argument_expression_list:
 
 /*基本表达式*/
 primary_expression:
-	identifier { /*标识符*/ $identifier$ = $1; }
-	| CONSTANT { /*常数*/ $$ = new IntExpAST(atoi($1)); }
-	| CHAR_CONSTANT { $$ = new CharExpAST($1->name[0]); }
+	identifier { /*标识符*/ $<identifier>$ = $1; }
+	| CONSTANT { /*常数*/ $$ = new IntExpAST(atoi($1->c_str())); }
+	| CHAR_CONSTANT { $$ = new CharExpAST((*$1)[0]); }
 	| STRING_LITERAL {/*字符串常数*/
 		/* $$ = new StringLiteral(*$1); */
     }
@@ -123,7 +144,10 @@ postfix_expression:
 	| identifier LBRACKET expression RBRACKET { /*数组调用*/ /* $$ = new ArrayIndex(); ... */ }
 	| identifier LPAREN argument_expression_list RPAREN {
         /*有参数的函数调用 (和定义一样，改为直接设置argument list) */
-		/* $$ = new FunctionCallAST(); */
+		FunctionCallAST* func_call = new FunctionCallAST($1->getName());
+		for (auto p = $3->begin(); p != $3->end(); p++)
+			func_call->addArg(*p);
+		$<function_call>$ = func_call;
     }
 	;
 
@@ -212,7 +236,7 @@ logical_or_expression:
 /*赋值语句*/
 expression:
 	logical_or_expression { $$ = $1; }
-	| unary_expression ASSIGN expression { $$ = new BinaryOptExpAST($2, $1, $3); }
+	| unary_expression ASSIGN expression { /*$$ = new BinaryOptExpAST($2, $1, $3);*/ }
 	;
 
 /*类型规定*/
@@ -231,44 +255,63 @@ identifier:
 
 /*声明*/
 statement:
-	compound_statement
-	| expression_statement
+	compound_statement { $<block>$ = $1; }
+	| expression_statement { $<block>$ = $1; }
 	| selection_statement
 	| iteration_statement
-	| jump_statement
+	| jump_statement { $$ = $1; }
 	;
 
 /*复合语句*/
 compound_statement:
 	LBRACE RBRACE { $$ = new BlockAST(); }
-	| LBRACE statement_list RBRACE { /* $$ = new BlockAST(); $$->setStmts($2); */ }
-	| LBRACE declaration_list RBRACE { /* $$ = new BlockAST(); $$->setDec($2); */ }
-	| LBRACE declaration_list statement_list RBRACE { /* $$ = new BlockAST(); $$->setDec($2);
-		$$->setStmts($3); */ }
+	| LBRACE statement_list RBRACE { 
+		$$ = new BlockAST();
+		for (auto p = $2->begin(); p != $2->end(); p++) $$->addAST(*p);	
+	}
+	| LBRACE declaration_list RBRACE {
+		$$ = new BlockAST();
+		// need VariableDeclaration
+		// for (auto p = $1->begin(); p != $1->end(); p++) $$->addAST()
+	}
+	| LBRACE declaration_list statement_list RBRACE {
+		$$ = new BlockAST();
+		for (auto p = $3->begin(); p != $3->end(); p++) $$->addAST(*p);
+	}
 	;
 
 /*声明部分*/
 declaration_list:
-	variable_declaration SEMICOLON{ $$ = $1; }
+	variable_declaration SEMICOLON{ /*$$ = $1;*/ }
 	| declaration_list variable_declaration SEMICOLON{ /* $1->push_back($2); */ }
 	;
 
 /*语句部分*/
 statement_list:
-	statement { /* $$ = new Statements(); $$->push_back($1); */ }
-	| statement_list statement { /* $1->push_back($2); */ }
+	statement { $$ = new std::vector<AST*>(); $$->push_back($1); }
+	| statement_list statement { $1->push_back($2); }
 	;
 
 /*表达式语句*/
 expression_statement:
-	SEMICOLON
-	| expression SEMICOLON { $$ = $1; }
+	SEMICOLON { $$ = nullptr; }
+	| expression SEMICOLON { $$ = new BlockAST(); $$->addAST($1); }
 	;
 
 /*条件语句*/
 selection_statement:
-	IF LPAREN expression RPAREN statement %prec LOWER_THAN_ELSE { $$ = new IfExpAST($3, $5, nullptr); }
-	| IF LPAREN expression RPAREN statement ELSE statement { $$ = new IfExpAST($3, $5, $7); }
+	IF LPAREN expression RPAREN statement %prec LOWER_THAN_ELSE {
+		BlockAST* stmt_block = new BlockAST();
+		stmt_block->addAST($5);
+		$$ = new IfExpAST($3, stmt_block, nullptr);
+	}
+	| IF LPAREN expression RPAREN statement ELSE statement {
+		BlockAST* if_stmt_block = new BlockAST();
+		if_stmt_block->addAST($5);
+		BlockAST* else_stmt_block = new BlockAST();
+		else_stmt_block->addAST($5);
+		$$ = new IfExpAST($3, if_stmt_block, else_stmt_block);
+	}
 	;
 
 /*循环语句*/
@@ -276,11 +319,15 @@ iteration_statement:
 	WHILE LPAREN expression RPAREN statement {
 		/* $$ = new WhileExpAST($3, $5); */
 	}
-	| FOR LPAREN expression_statement expression_statement RPAREN statement {
-		$$ = new ForExpAST($3, $4, nullptr, $6);
+	| FOR LPAREN expression SEMICOLON expression SEMICOLON RPAREN statement {
+		BlockAST* stmt_block = new BlockAST();
+		stmt_block->addAST($8);
+		$$ = new ForExpAST($3, $5, nullptr, stmt_block);
 	}
-	| FOR LPAREN expression_statement expression_statement expression RPAREN statement {
-		$$ = new ForExpAST($3, $4, $5, $7);
+	| FOR LPAREN expression SEMICOLON expression SEMICOLON expression RPAREN statement {
+		BlockAST* stmt_block = new BlockAST();
+		stmt_block->addAST($9);
+		$$ = new ForExpAST($3, $5, $7, stmt_block);
 	}
 	;
 
@@ -288,8 +335,8 @@ iteration_statement:
 jump_statement:
 	CONTINUE SEMICOLON { }
 	| BREAK SEMICOLON { }
-	| RETURN SEMICOLON { }
-	| RETURN expression SEMICOLON { }
+	| RETURN SEMICOLON { $$ = new ReturnExpAST(); }
+	| RETURN expression SEMICOLON { $$ = new ReturnExpAST($2); }
 	;
 
 %%
@@ -300,12 +347,12 @@ void yyerror(const char *s)
 	printf("\n%*s\n%*s\n", column, "^", column, s);
 }
 
-int main(int argc,char* argv[]) {
-	yyin = fopen(argv[1],"r");
+// int main(int argc,char* argv[]) {
+// 	yyin = fopen(argv[1],"r");
 	
-	yyparse();
-	printf("\n");
+// 	yyparse();
+// 	printf("\n");
 
-	fclose(yyin);
-	return 0;
-}
+// 	fclose(yyin);
+// 	return 0;
+// }

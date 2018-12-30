@@ -8,8 +8,9 @@ IS			(u|U|l|L)*
 %{
 #include <stdio.h>
 #include <string>
-#include "y.tab.hpp"
+#include <stdlib.h>
 #include "AST.h"
+#include "y.tab.hpp"
 #define SAVE_NAME yylval.name = new string(yytext)
 #define SAVE_TOKEN(t) yylval.token = t
 using namespace std;
@@ -89,20 +90,16 @@ int yywrap()
 
 void comment()
 {
-	char c, c1;
-
-loop:
-	while ((c = input()) != '*' && c != 0)
-		putchar(c);
-
-	if ((c1 = input()) != '/' && c != 0)
+	column = 0;
+	char c, prev = 0;
+	
+	while (cin >> c)      /* (EOF maps to 0) */
 	{
-		unput(c1);
-		goto loop;
+		if (c == '/' && prev == '*')
+			return;
+		prev = c;
 	}
-
-	if (c != 0)
-		putchar(c1);
+	printf("unterminated comment");
 }
 
 void count()
