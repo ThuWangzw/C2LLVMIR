@@ -76,7 +76,7 @@ public:
 class BlockAST:public ExpAST{
 private:
     std::string blockName;
-    std::vector<AST*> stmsAndExps;
+    std::vector<AST*> stmsAndExps;//needed
     std::map<std::string,llvm::Value*> symboltable;
     llvm::Function* func;
     bool bbCreated;
@@ -149,6 +149,16 @@ private:
 public:
     ForExpAST(ExpAST* ninit, ExpAST* ncond, ExpAST* nincre, BlockAST* nblock):init(ninit), cond(ncond), incre(nincre), block(nblock){}
     ~ForExpAST(){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+class WhileExpAST:public ExpAST{
+private:
+    ExpAST* cond;//needed
+    BlockAST* block;//needed
+public:
+    WhileExpAST(ExpAST* ncond, BlockAST* nblock):cond(ncond), block(nblock){}
+    ~WhileExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
 };
 #endif //C2LLVMIR_AST_H

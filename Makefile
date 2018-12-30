@@ -2,6 +2,7 @@ all: compiler lex yacc
 
 OBJS =  codeGen.o \
 		main.o	 \
+		AST.o   \
 
 LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cxxflags --ldflags`
