@@ -127,6 +127,7 @@ llvm::Function* FunctionDefAST::codeGen(Context* context){
         cout<<func;
         return nullptr;
     }
+    context->nowFunc = func;
     //add block
     this->body->setName("entry");
     this->body->setFunc(func);
@@ -151,17 +152,17 @@ llvm::Value* BlockAST::codeGen(Context* context){
             }
             this->bblock = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
             context->builder.SetInsertPoint(this->bblock);
+            //cout<< this->blockName <<"func not null"<<endl;
         } else{
-            //this->func = context->builder.GetInsertBlock()->getParent();
-            //if(this->func) cout<<"func not null";
-           // else cout<< this->blockName <<"func null";
-            this->bblock = BasicBlock::Create(context->llvmContext, this->blockName);
+            //Function* tmp = context->builder.GetInsertBlock()->getParent();
+            this->bblock = BasicBlock::Create(context->llvmContext, this->blockName, context->nowFunc);
             context->builder.SetInsertPoint(this->bblock);
         }
     } else{
         context->builder.SetInsertPoint(this->bblock);
     }
     context->blockstack.push_back(this);
+
     for(vector<AST*>::iterator iter = this->stmsAndExps.begin(); iter != this->stmsAndExps.end(); iter++){
         AST* now = *iter;
         retval = now->codeGen(context);
@@ -289,6 +290,7 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     BasicBlock* loop = this->block->BBCreate(context);
     context->builder.CreateBr(loop);
     context->builder.SetInsertPoint(loop);
+
     //create end
     BasicBlock *AfterBB = BasicBlock::Create(context->llvmContext, "afterloop");
     //add cond
@@ -303,8 +305,40 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     if(!this->block->codeGen(context)){
         return  LogErrorV("for block error");
     }
+
     //incre and continue
     this->incre->codeGen(context);
+    context->builder.CreateBr(loop);
+    //after loop
+
+    TheFunction->getBasicBlockList().push_back(AfterBB);
+    context->builder.SetInsertPoint(AfterBB);
+    return Constant::getNullValue(getType(TYPE_INT, context));
+}
+
+llvm::Value* WhileExpAST::codeGen(Context* context){
+    Function *TheFunction = context->builder.GetInsertBlock()->getParent();
+    BasicBlock *PreheaderBB = context->builder.GetInsertBlock();
+    this->block->setName("loop");
+    this->block->setFunc(TheFunction);
+    BasicBlock* loop = this->block->BBCreate(context);
+    context->builder.CreateBr(loop);
+    context->builder.SetInsertPoint(loop);
+    //create end
+    BasicBlock *AfterBB = BasicBlock::Create(context->llvmContext, "afterloop");
+    //add cond
+    if(!this->cond){
+        this->cond = new IntExpAST(1);
+    }
+    Value* CondV = this->cond->codeGen(context);
+    CondV = context->builder.CreateICmpNE(
+            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "forcond");
+    //choose cond
+    context->builder.CreateCondBr(CondV, loop, AfterBB);
+    if(!this->block->codeGen(context)){
+        return  LogErrorV("while block error");
+    }
+    //continue
     context->builder.CreateBr(loop);
     //after loop
     TheFunction->getBasicBlockList().push_back(AfterBB);
