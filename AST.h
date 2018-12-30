@@ -76,7 +76,7 @@ public:
 class BlockAST:public ExpAST{
 private:
     std::string blockName;
-    std::vector<AST*> stmsAndExps;
+    std::vector<AST*> stmsAndExps;//needed
     std::map<std::string,llvm::Value*> symboltable;
     llvm::Function* func;
     bool bbCreated;
