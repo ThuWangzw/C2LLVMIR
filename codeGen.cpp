@@ -108,7 +108,9 @@ llvm::Function* FunctionDefAST::codeGen(Context* context){
     this->body->setFunc(func);
     Value* retres = this->body->codeGen(context);
     if(retres){
-        context->builder.CreateRet(retres);
+        IntExpAST* retval = new IntExpAST(0);
+        ReturnExpAST* retexp = new ReturnExpAST(retval);
+        retexp->codeGen(context);
         llvm::verifyFunction(*func);
         return func;
     } else{
@@ -285,4 +287,10 @@ llvm::Value* WhileExpAST::codeGen(Context* context){
     TheFunction->getBasicBlockList().push_back(AfterBB);
     context->builder.SetInsertPoint(AfterBB);
     return Constant::getNullValue(getType(TYPE_INT, context));
+}
+
+llvm::Value* ReturnExpAST::codeGen(Context* context){
+    Value* retval = this->retexp->codeGen(context);
+    context->builder.CreateRet(retval);
+    return retval;
 }
