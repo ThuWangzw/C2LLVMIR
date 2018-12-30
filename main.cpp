@@ -68,7 +68,10 @@ int main(){
     WhileExpAST* whileexp = new WhileExpAST(whilecond, whileblock);
 //end while
 
-
+//return
+    IntExpAST *retast = new IntExpAST(99);
+    ReturnExpAST * retexp = new ReturnExpAST(retast);
+//end return
     IntExpAST *intast = new IntExpAST(1);
     IntExpAST *intast2 = new IntExpAST(2);
     BinaryOptExpAST *bin = new BinaryOptExpAST(BINARY_OPT_MULTI,intast, intast2);
@@ -82,6 +85,7 @@ int main(){
     //func->addArg(TYPE_INT,std::string("arg2"));
     BlockAST *block = new BlockAST();
     block->addAST(block2);
+    block->addAST(retexp);
     //block->addAST(block2);
     //block->addAST(bin);
 //
