@@ -71,3 +71,6 @@ llvm::BasicBlock* BlockAST::BBCreate(Context* context){
     return this->bblock;
 }
 
+void ReturnExpAST::setExp(ExpAST* n_retexp){
+    this->retexp = n_retexp;
+}

@@ -161,4 +161,15 @@ public:
     ~WhileExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
 };
+
+class ReturnExpAST:public ExpAST{
+private:
+    ExpAST* retexp;
+public:
+    ReturnExpAST():retexp(nullptr){}
+    ReturnExpAST(ExpAST* n_retexp):retexp(n_retexp){}
+    ~ReturnExpAST(){}
+    void setExp(ExpAST* n_retexp);
+    virtual llvm::Value* codeGen(Context* context);
+};
 #endif //C2LLVMIR_AST_H
