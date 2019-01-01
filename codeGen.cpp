@@ -28,6 +28,10 @@ Value* IntExpAST::codeGen(Context* context) {
     return ConstantInt::get(Type::getInt32Ty(context->llvmContext), this->value, true);
 }
 
+Value* CharExpAST::codeGen(Context* context){
+    return ConstantInt::get(Type::getInt8Ty(context->llvmContext), this->value, true);
+}
+
 Value* BinaryOptExpAST::codeGen(Context* context) {
     Value *L = this->LHS->codeGen(context);
     Value *R = this->RHS->codeGen(context);
@@ -293,4 +297,56 @@ llvm::Value* ReturnExpAST::codeGen(Context* context){
     Value* retval = this->retexp->codeGen(context);
     context->builder.CreateRet(retval);
     return retval;
+}
+
+llvm::Value* IdentifierExpAST::codeGen(Context *context){
+    Value* t_value = context -> getSymbol( this -> name);
+    if (!t_value){
+        return LogErrorV("Undeclared Variables");
+    }
+    if (t_value->getType() -> isPointerTy()){
+        auto arrayPtr = context->builder.CreateLoad(t_value,"arrayPtr");
+        //array type
+        if(arrayPtr->getType() -> isArrayTy()){
+            std::vector<Value*> indices;
+            indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+            auto ptr = context->builder.CreateInBoundsGEP(t_value,indices,"arrayPtr");
+            return ptr;
+        }
+    }
+
+    return context->builder.CreateLoad(t_value,false,"");
+}
+
+llvm::Value* VariableAssignAST::codeGen(Context *context){
+    Value* l_value = context -> getSymbol( this->lhs->name );
+    if (!l_value){
+        return LogErrorV("Undeclared Variables");
+    }
+    Value* r_value = this -> rhs ->codeGen(context);
+    context->builder.CreateStore(r_value,l_value);
+    return l_value;
+}
+
+llvm::Value* VariableDecAST::codeGen(Context *context){
+    Type * tp = getType(this->type,context);
+    Value *inst = nullptr;
+    if(this->isArray){
+        if(this->arrayLength <= 0){
+            return LogErrorV("Wrong Array Length");
+        }
+        Value * arraySizeValue  = IntExpAST(this->arrayLength).codeGen(context);
+        auto arrayType = ArrayType::get(tp,this->arrayLength);
+        inst = context->builder.CreateAlloca(arrayType,arraySizeValue,"arraytmp");
+    }
+    else{
+        inst = context->builder.CreateAlloca(tp);
+    }
+    context->addSymbol(this->lhs->name,inst);
+
+    if(this->rhs != nullptr){
+        VariableAssignAST assign(this->lhs,this->rhs);
+        assign.codeGen(context);
+    }
+    return inst;
 }

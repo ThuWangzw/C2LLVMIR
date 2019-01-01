@@ -4,12 +4,14 @@
 #include <llvm/IR/Value.h>
 #include <iostream>
 #include <map>
+#include <vector>
 #include <string>
 #include <utility>
 #include "utils.h"
 class Context;
 class FunctionDefAST;
 llvm::Type*  getType(int typeidt, Context* context);
+
 
 class AST{
 public:
@@ -64,20 +66,13 @@ public:
     virtual llvm::Value* codeGen(Context* context);
 };
 
-//Indentifier
-class IdentifierExpAST:public ExpAST{
-private:
-    std::string name;
-public:
-    IdentifierExpAST(std::string t_name):name(t_name){}
-    virtual llvm::Value* codeGen(Context* context);
-};
 
 class BlockAST:public ExpAST{
 private:
     std::string blockName;
     std::vector<AST*> stmsAndExps;//needed
     std::map<std::string,llvm::Value*> symboltable;
+    std::map<std::string,int> symboltype;
     llvm::Function* func;
     bool bbCreated;
     llvm::BasicBlock* bblock;
@@ -86,7 +81,7 @@ public:
     BlockAST(std::string str):blockName(str), func(nullptr), bbCreated(false){}
     ~BlockAST(){}
     bool addAST(AST* one);
-    bool addSymbol(const std::string&,const llvm::Value*);
+    bool addSymbol(const std::string&, llvm::Value*);
     llvm::Value *getSymbol(const std::string&);
     virtual llvm::Value* codeGen(Context* context);
     void setName(const std::string newname){blockName.assign(newname);};
@@ -172,4 +167,44 @@ public:
     void setExp(ExpAST* n_retexp);
     virtual llvm::Value* codeGen(Context* context);
 };
+
+typedef std::vector<ExpAST*> ExpressionList;
+
+//Indentifier
+class IdentifierExpAST:public ExpAST{
+public:
+    std::string name;
+    IdentifierExpAST(std::string t_name):name(t_name){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+//Variable
+class VariableAssignAST:public ExpAST{
+private:
+    IdentifierExpAST* lhs;
+    ExpAST* rhs;
+public:
+    VariableAssignAST(IdentifierExpAST* t_lhs, ExpAST* t_rhs):
+        lhs(t_lhs),rhs(t_rhs){}
+    virtual llvm::Value* codeGen(Context * context);
+};
+
+
+class VariableDecAST:public StmAST{
+private:
+    IdentifierExpAST* lhs;
+    ExpAST* rhs;
+    int type;
+    bool isArray;
+    uint64_t arrayLength;
+    ExpressionList* arrayValues;
+public:
+    VariableDecAST(int t_type, IdentifierExpAST* t_lhs,ExpAST* t_rhs = nullptr, int t_isArray = false, uint64_t t_arrayLength = 0,ExpressionList* t_arrayValues = nullptr):
+        lhs(t_lhs),rhs(t_rhs),type(t_type),isArray(t_isArray),arrayValues(t_arrayValues),arrayLength(t_arrayLength){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
+
 #endif //C2LLVMIR_AST_H
+

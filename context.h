@@ -6,10 +6,13 @@
 #include <llvm/IR/Module.h>
 #include <llvm/Support/raw_ostream.h>
 #include <memory>
-#include <stack>
+#include <vector>
+#include <map>
 #include "AST.h"
 #include <iostream>
 #include <string>
+
+class BlockAST;
 
 class Context{
 public:
@@ -17,14 +20,20 @@ public:
     llvm::IRBuilder<> builder;
     llvm::Function* nowFunc;
     std::unique_ptr<llvm::Module> theModule;
+
     std::vector<BlockAST*> blockstack;
     //get Symbol
     llvm::Value* getSymbol(std::string& t_name){
-        //return blockstack.top() -> getSymbol(t_name);
+        for(auto it = blockstack.rbegin(); it != blockstack.rend(); it++ ){
+            llvm::Value * t_value = (*it) -> getSymbol(t_name);
+            if (t_value)
+                return t_value;
+        }
+        return nullptr;
     }
     //add Symbol
-    bool addSymbol(const std::string& t_name,const llvm::Value* t_value){
-        //return blockstack.top() -> addSymbol(t_name,t_value);
+    bool addSymbol(const std::string& t_name, llvm::Value* t_value){
+         return blockstack.back() -> addSymbol(t_name,t_value);
     }
     Context():builder(llvmContext), nowFunc(nullptr){
         this->theModule = llvm::make_unique<llvm::Module>("c model", this->llvmContext);
