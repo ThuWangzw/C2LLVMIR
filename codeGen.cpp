@@ -28,6 +28,10 @@ Value* IntExpAST::codeGen(Context* context) {
     return ConstantInt::get(Type::getInt32Ty(context->llvmContext), this->value, true);
 }
 
+Value* CharExpAST::codeGen(Context* context){
+    return ConstantInt::get(Type::getInt8Ty(context->llvmContext), this->value, true);
+}
+
 Value* BinaryOptExpAST::codeGen(Context* context) {
     Value *L = this->LHS->codeGen(context);
     Value *R = this->RHS->codeGen(context);
@@ -294,3 +298,108 @@ llvm::Value* ReturnExpAST::codeGen(Context* context){
     context->builder.CreateRet(retval);
     return retval;
 }
+
+llvm::Value* IdentifierExpAST::codeGen(Context *context){
+    Value* t_value = context -> getSymbol( this -> name);
+    if (!t_value){
+        return LogErrorV("Undeclared Variables");
+    }
+    if (t_value->getType() -> isPointerTy()){
+        auto arrayPtr = context->builder.CreateLoad(t_value,"arrayPtr");
+        //array type
+        if(arrayPtr->getType() -> isArrayTy()){
+            std::vector<Value*> indices;
+            indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+            auto ptr = context->builder.CreateInBoundsGEP(t_value,indices,"arrayPtr");
+            return ptr;
+        }
+    }
+
+    return context->builder.CreateLoad(t_value,false,"");
+}
+
+llvm::Value* VariableAssignAST::codeGen(Context *context){
+    Value* l_value = context -> getSymbol( this->lhs->name );
+    if (!l_value){
+        return LogErrorV("Undeclared Variables");
+    }
+    Value* r_value = this -> rhs ->codeGen(context);
+    context->builder.CreateStore(r_value,l_value);
+    return l_value;
+}
+
+llvm::Value* VariableDecAST::codeGen(Context *context){
+    Type * tp = getType(this->type,context);
+    Value *inst = nullptr;
+    if(this->lhs->isArray){
+        if(this->lhs->arrayLength <= 0){
+            return LogErrorV("Wrong Array Length");
+        }
+        Value* arraySizeValue  = IntExpAST(this->lhs->arrayLength).codeGen(context);
+        auto arrayType = ArrayType::get(tp,this->lhs->arrayLength);
+        inst = context->builder.CreateAlloca(arrayType,arraySizeValue,"arraytmp");
+    }
+    else{
+        inst = context->builder.CreateAlloca(tp);
+    }
+    context->addSymbol(this->lhs->name,inst);
+    context->setSymbolType(this->lhs->name,this->type);
+
+    if(this->rhs != nullptr){
+        VariableAssignAST assign(this->lhs,this->rhs);
+        assign.codeGen(context);
+    }
+    return inst;
+}
+
+
+llvm::Value* ArrayIndexAST::codeGen(Context *context){
+    auto arrPtr = context->getSymbol(this->arrayName->name);
+    auto arrType = getType(context->getSymbolType(this->arrayName->name),context);
+
+    auto index = this->indexExp->codeGen(context);
+    ArrayRef<Value*> indices;
+
+    if(arrPtr->getType()->isPointerTy()){
+        indices ={ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
+    }
+    else{
+        return LogErrorV("The Variable is not array");
+    }
+    auto ptr = context->builder.CreateInBoundsGEP(arrPtr,indices,"elementPtr");
+    return context->builder.CreateAlignedLoad(ptr,4);
+}
+
+
+llvm::Value* ArrayAssignAST::codeGen(Context *context){
+    auto arrValue = context->getSymbol(this->index->arrayName->name);
+    if(arrValue == nullptr){
+        return LogErrorV("Undeclared Variable");
+    }
+
+    auto arrPtr = context->builder.CreateLoad(arrValue,"arrayPtr");
+
+    if(!arrPtr->getType()->isArrayTy() && !arrPtr->getType()->isPointerTy()){
+        return LogErrorV("Variable is not Array");
+    }
+
+    auto index = this->index->indexExp->codeGen(context);
+    ArrayRef<Value*> indices= {ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
+    auto ptr = context->builder.CreateInBoundsGEP(arrPtr,indices,"elementPtr");
+    return context->builder.CreateAlignedStore(this->r_value->codeGen(context),ptr,4);
+}
+
+
+llvm::Value* ArrayInitAST::codeGen(Context *context){
+    auto arrPtr = this->arrayDec->codeGen(context);
+    auto arrSize = this->arrayDec->lhs->arrayLength;
+
+    for(int i = 0; i < this->list->size(); i++){
+        IntExpAST* indexValue = new IntExpAST(i);
+        ArrayIndexAST* id = new ArrayIndexAST(this->arrayDec->lhs,indexValue);
+        ArrayAssignAST* asg = new ArrayAssignAST(id,this->list->at(i));
+        asg->codeGen(context);
+    }
+    return nullptr;
+}
+

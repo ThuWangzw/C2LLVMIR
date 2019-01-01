@@ -39,10 +39,16 @@ int main(int argc,char* argv[]){
 //     IntExpAST *intast52 = new IntExpAST(4);
 //     funccall2->addArg(intast52);
 
-// //if
-//     BlockAST* thenblock = new BlockAST();
-//     thenblock->addAST(funccall1);
-
+//if
+    // BlockAST* thenblock = new BlockAST();
+    // thenblock->addAST(funccall1);
+    // IdentifierExpAST* val1 = new IdentifierExpAST("my_val1");
+    // IntExpAST *val_tmp1 = new IntExpAST(1);
+    // IntExpAST *val_tmp2 = new IntExpAST(2);
+    // BinaryOptExpAST *val_tmp3 = new BinaryOptExpAST(BINARY_OPT_MULTI,val_tmp1, val_tmp2);
+    // VariableDecAST* dec1 = new VariableDecAST(TYPE_INT,val1,val_tmp3);
+    // thenblock->addAST(dec1);
+    
 //     BlockAST* elseblock = new BlockAST();
 //     elseblock->addAST(funccall2);
 

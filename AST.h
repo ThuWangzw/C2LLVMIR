@@ -4,6 +4,7 @@
 #include <llvm/IR/Value.h>
 #include <iostream>
 #include <map>
+#include <vector>
 #include <string>
 #include <utility>
 #include "utils.h"
@@ -13,6 +14,8 @@ using json = nlohmann::json;
 class Context;
 class FunctionDefAST;
 llvm::Type*  getType(int typeidt, Context* context);
+
+
 
 class AST{
 public:
@@ -90,27 +93,13 @@ public:
     }
 };
 
-//Indentifier
-class IdentifierExpAST:public ExpAST{
-private:
-    std::string name;
-public:
-    IdentifierExpAST(std::string t_name):name(t_name){}
-    std::string getName(){return name;};
-    virtual llvm::Value* codeGen(Context* context) {return nullptr;}
-    virtual json generateJson(){
-        json j;
-        j["type"] = "Identifier";
-        j["name"] = name;
-        return j;
-    }
-};
 
 class BlockAST:public ExpAST{
 private:
     std::string blockName;
     std::vector<AST*> stmsAndExps;//needed
     std::map<std::string,llvm::Value*> symboltable;
+    std::map<std::string,int> symboltype;
     llvm::Function* func;
     bool bbCreated;
     llvm::BasicBlock* bblock;
@@ -119,7 +108,9 @@ public:
     BlockAST(std::string str):blockName(str), func(nullptr), bbCreated(false){}
     ~BlockAST(){}
     bool addAST(AST* one);
-    bool addSymbol(const std::string&,const llvm::Value*);
+    bool addSymbol(const std::string&, llvm::Value*);
+    bool setSymbolType(const std::string&, int);
+    int getSymbolType(const std::string&);
     llvm::Value *getSymbol(const std::string&);
     virtual llvm::Value* codeGen(Context* context);
     void setName(const std::string newname){blockName.assign(newname);};
@@ -258,4 +249,83 @@ public:
         return j;
     }
 };
+
+typedef std::vector<ExpAST*> ExpressionList;
+
+//Indentifier
+class IdentifierExpAST:public ExpAST{
+public:
+    std::string name;
+    bool isArray;
+    uint64_t arrayLength;
+    IdentifierExpAST(std::string t_name,int t_isArray = false,uint64_t t_arrayLength = 0):
+        name(t_name),isArray(t_isArray),arrayLength(t_arrayLength){}
+    virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "Identifier";
+        j["name"] = name;
+        j['isArray'] = isArray;
+        j['arrayLength'] = arrayLength;
+        return j;
+    }
+};
+
+//Variable
+class VariableAssignAST:public ExpAST{
+public:
+    IdentifierExpAST* lhs;
+    ExpAST* rhs;
+    VariableAssignAST(IdentifierExpAST* t_lhs, ExpAST* t_rhs):
+        lhs(t_lhs),rhs(t_rhs){}
+    virtual llvm::Value* codeGen(Context * context);
+};
+
+
+class VariableDecAST:public StmAST{
+public:
+    IdentifierExpAST* lhs;
+    ExpAST* rhs;
+    int type;
+    VariableDecAST(int t_type, IdentifierExpAST* t_lhs,ExpAST* t_rhs = nullptr):
+        lhs(t_lhs),rhs(t_rhs),type(t_type){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
+//Array
+class ArrayIndexAST:public ExpAST{
+public:
+    IdentifierExpAST * arrayName;
+    ExpAST * indexExp;
+    ArrayIndexAST(IdentifierExpAST* t_arrayName,ExpAST* t_indexExp):
+        arrayName(t_arrayName),indexExp(t_indexExp){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
+class ArrayAssignAST:public ExpAST{
+public:
+    ArrayIndexAST *index;
+    ExpAST* r_value;
+    ArrayAssignAST(ArrayIndexAST *idx,ExpAST* vl):
+        index(idx),r_value(vl){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
+class ArrayInitAST:public ExpAST{
+public:
+    VariableDecAST* arrayDec;
+    ExpressionList* list;
+    ArrayInitAST(VariableDecAST* dec,ExpressionList* lt):
+        arrayDec(dec),list(lt){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
+
+
+
 #endif //C2LLVMIR_AST_H
+

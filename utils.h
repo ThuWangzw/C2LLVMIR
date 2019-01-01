@@ -25,6 +25,7 @@
 
 #define TYPE_INT INT
 #define TYPE_CHAR CHAR
+#define TYPE_ERROR -1
 
 int LogError(const char* errstr);
 llvm::Value* LogErrorV(const char* errstr);

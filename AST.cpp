@@ -75,3 +75,39 @@ llvm::BasicBlock* BlockAST::BBCreate(Context* context){
 void ReturnExpAST::setExp(ExpAST* n_retexp){
     this->retexp = n_retexp;
 }
+
+bool BlockAST::addSymbol(const std::string& name, llvm::Value* t_value){
+    auto it = this -> symboltable.find(name);
+    if( it != this->symboltable.end()){
+        this->symboltable[name] = t_value;
+        return true;
+    }
+    return false;
+}
+    
+    
+llvm::Value * BlockAST::getSymbol(const std::string& name){
+    auto it = this -> symboltable.find(name);
+    if( it != this->symboltable.end()){
+        return nullptr;
+    }
+    return this->symboltable[name];
+}
+
+bool BlockAST::setSymbolType(const std::string& name, int tp){
+    auto it = this -> symboltype.find(name);
+    if( it != this->symboltype.end()){
+        this->symboltype[name] = tp;
+        return true;
+    }
+    return false;
+}
+
+int BlockAST::getSymbolType(const std::string& name){
+    auto it = this -> symboltype.find(name);
+    if( it != this->symboltype.end()){
+        return TYPE_ERROR;
+    }
+    return this->symboltype[name];
+
+}
