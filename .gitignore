@@ -4,3 +4,6 @@ compiler
 main.cpp
 test.*
 *.out
+.DS_Store
+.vscode/
+

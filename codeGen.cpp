@@ -9,7 +9,7 @@
 #include <iostream>
 #include "context.h"
 #include "AST.h"
-
+#include "y.tab.hpp"
 
 using namespace std;
 using namespace llvm;

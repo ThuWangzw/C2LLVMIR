@@ -10,22 +10,22 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/IR/Verifier.h>
 
-#define BINARY_OPT_PLUS 0
-#define BINARY_OPT_MINUS 1
-#define BINARY_OPT_MULTI 2
-#define BINARY_OPT_DIV 3
-#define BINARY_OPT_AND 4
-#define BINARY_OPT_OR 5
-#define BINARY_OPT_EQ 6
-#define BINARY_OPT_NE 7
-#define BINARY_OPT_LT 8 //<
-#define BINARY_OPT_GT 9 //>
-#define BINARY_OPT_LE 10 //<=
-#define BINARY_OPT_GE 11 //>=
+#define BINARY_OPT_PLUS PLUS
+#define BINARY_OPT_MINUS MINUS
+#define BINARY_OPT_MULTI MUL
+#define BINARY_OPT_DIV DIV
+#define BINARY_OPT_AND BIT_AND
+#define BINARY_OPT_OR BIT_OR
+#define BINARY_OPT_EQ COM_EQ
+#define BINARY_OPT_NE COM_NE
+#define BINARY_OPT_LT COM_L //<
+#define BINARY_OPT_GT COM_G //>
+#define BINARY_OPT_LE COM_LE //<=
+#define BINARY_OPT_GE COM_GE //>=
 
+#define TYPE_INT INT
+#define TYPE_CHAR CHAR
 #define TYPE_ERROR -1
-#define TYPE_INT 0
-#define TYPE_CHAR 1
 
 int LogError(const char* errstr);
 llvm::Value* LogErrorV(const char* errstr);
