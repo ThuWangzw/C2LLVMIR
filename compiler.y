@@ -108,22 +108,21 @@ function_definition:
 /*函数声明的参数*/
 func_decl_arguments:
 	/* blank */ { $$ = new std::vector<std::pair<int,std::string>>();}
-	| variable_declaration { /*$$ = new std::vector<std::pair<int,std::string>>(); $$->push_back($1);*/ }
-	| func_decl_arguments COMMA variable_declaration { /*$1->push_back($3);*/ }
+	| variable_declaration { $$ = new std::vector<std::pair<int,std::string>>(); $$->push_back($1); }
+	| func_decl_arguments COMMA variable_declaration { $1->push_back($3); }
 	;
 
 /*调用函数参数列表*/
 argument_expression_list:
-	/* blank */{ /* $$ = new ExpressionList(); */ }
+	/* blank */{ $$ = new std::vector<ExpAST*>(); }
 	| expression {
 		//参数
-		/* $$ = new ExpressionList(); 
-		*  $$->push_back($1);
-		*/
+		$$ = new std::vector<ExpAST*>(); 
+		$$->push_back($1);
 	}
 	| argument_expression_list COMMA expression {
 		//多个参数
-		/* $1->push_back($3); */
+		$1->push_back($3);
 	}
 	;
 
