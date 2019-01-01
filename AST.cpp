@@ -91,5 +91,22 @@ llvm::Value * BlockAST::getSymbol(const std::string& name){
         return nullptr;
     }
     return this->symboltable[name];
+}
+
+bool BlockAST::setSymbolType(const std::string& name, int tp){
+    auto it = this -> symboltype.find(name);
+    if( it != this->symboltype.end()){
+        this->symboltype[name] = tp;
+        return true;
+    }
+    return false;
+}
+
+int BlockAST::getSymbolType(const std::string& name){
+    auto it = this -> symboltype.find(name);
+    if( it != this->symboltype.end()){
+        return TYPE_ERROR;
+    }
+    return this->symboltype[name];
 
 }

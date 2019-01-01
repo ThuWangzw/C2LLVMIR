@@ -331,18 +331,19 @@ llvm::Value* VariableAssignAST::codeGen(Context *context){
 llvm::Value* VariableDecAST::codeGen(Context *context){
     Type * tp = getType(this->type,context);
     Value *inst = nullptr;
-    if(this->isArray){
-        if(this->arrayLength <= 0){
+    if(this->lhs->isArray){
+        if(this->lhs->arrayLength <= 0){
             return LogErrorV("Wrong Array Length");
         }
-        Value * arraySizeValue  = IntExpAST(this->arrayLength).codeGen(context);
-        auto arrayType = ArrayType::get(tp,this->arrayLength);
+        Value* arraySizeValue  = IntExpAST(this->lhs->arrayLength).codeGen(context);
+        auto arrayType = ArrayType::get(tp,this->lhs->arrayLength);
         inst = context->builder.CreateAlloca(arrayType,arraySizeValue,"arraytmp");
     }
     else{
         inst = context->builder.CreateAlloca(tp);
     }
     context->addSymbol(this->lhs->name,inst);
+    context->setSymbolType(this->lhs->name,this->type);
 
     if(this->rhs != nullptr){
         VariableAssignAST assign(this->lhs,this->rhs);
@@ -350,3 +351,55 @@ llvm::Value* VariableDecAST::codeGen(Context *context){
     }
     return inst;
 }
+
+
+llvm::Value* ArrayIndexAST::codeGen(Context *context){
+    auto arrPtr = context->getSymbol(this->arrayName->name);
+    auto arrType = getType(context->getSymbolType(this->arrayName->name),context);
+
+    auto index = this->indexExp->codeGen(context);
+    ArrayRef<Value*> indices;
+
+    if(arrPtr->getType()->isPointerTy()){
+        indices ={ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
+    }
+    else{
+        return LogErrorV("The Variable is not array");
+    }
+    auto ptr = context->builder.CreateInBoundsGEP(arrPtr,indices,"elementPtr");
+    return context->builder.CreateAlignedLoad(ptr,4);
+}
+
+
+llvm::Value* ArrayAssignAST::codeGen(Context *context){
+    auto arrValue = context->getSymbol(this->index->arrayName->name);
+    if(arrValue == nullptr){
+        return LogErrorV("Undeclared Variable");
+    }
+
+    auto arrPtr = context->builder.CreateLoad(arrValue,"arrayPtr");
+
+    if(!arrPtr->getType()->isArrayTy() && !arrPtr->getType()->isPointerTy()){
+        return LogErrorV("Variable is not Array");
+    }
+
+    auto index = this->index->indexExp->codeGen(context);
+    ArrayRef<Value*> indices= {ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
+    auto ptr = context->builder.CreateInBoundsGEP(arrPtr,indices,"elementPtr");
+    return context->builder.CreateAlignedStore(this->r_value->codeGen(context),ptr,4);
+}
+
+
+llvm::Value* ArrayInitAST::codeGen(Context *context){
+    auto arrPtr = this->arrayDec->codeGen(context);
+    auto arrSize = this->arrayDec->lhs->arrayLength;
+
+    for(int i = 0; i < this->list->size(); i++){
+        IntExpAST* indexValue = new IntExpAST(i);
+        ArrayIndexAST* id = new ArrayIndexAST(this->arrayDec->lhs,indexValue);
+        ArrayAssignAST* asg = new ArrayAssignAST(id,this->list->at(i));
+        asg->codeGen(context);
+    }
+    return nullptr;
+}
+

@@ -13,6 +13,7 @@ class FunctionDefAST;
 llvm::Type*  getType(int typeidt, Context* context);
 
 
+
 class AST{
 public:
     AST(){}
@@ -82,6 +83,8 @@ public:
     ~BlockAST(){}
     bool addAST(AST* one);
     bool addSymbol(const std::string&, llvm::Value*);
+    bool setSymbolType(const std::string&, int);
+    int getSymbolType(const std::string&);
     llvm::Value *getSymbol(const std::string&);
     virtual llvm::Value* codeGen(Context* context);
     void setName(const std::string newname){blockName.assign(newname);};
@@ -174,16 +177,18 @@ typedef std::vector<ExpAST*> ExpressionList;
 class IdentifierExpAST:public ExpAST{
 public:
     std::string name;
-    IdentifierExpAST(std::string t_name):name(t_name){}
+    bool isArray;
+    uint64_t arrayLength;
+    IdentifierExpAST(std::string t_name,int t_isArray = false,uint64_t t_arrayLength = 0):
+        name(t_name),isArray(t_isArray),arrayLength(t_arrayLength){}
     virtual llvm::Value* codeGen(Context* context);
 };
 
 //Variable
 class VariableAssignAST:public ExpAST{
-private:
+public:
     IdentifierExpAST* lhs;
     ExpAST* rhs;
-public:
     VariableAssignAST(IdentifierExpAST* t_lhs, ExpAST* t_rhs):
         lhs(t_lhs),rhs(t_rhs){}
     virtual llvm::Value* codeGen(Context * context);
@@ -191,18 +196,47 @@ public:
 
 
 class VariableDecAST:public StmAST{
-private:
+public:
     IdentifierExpAST* lhs;
     ExpAST* rhs;
     int type;
-    bool isArray;
-    uint64_t arrayLength;
-    ExpressionList* arrayValues;
-public:
-    VariableDecAST(int t_type, IdentifierExpAST* t_lhs,ExpAST* t_rhs = nullptr, int t_isArray = false, uint64_t t_arrayLength = 0,ExpressionList* t_arrayValues = nullptr):
-        lhs(t_lhs),rhs(t_rhs),type(t_type),isArray(t_isArray),arrayValues(t_arrayValues),arrayLength(t_arrayLength){}
+    VariableDecAST(int t_type, IdentifierExpAST* t_lhs,ExpAST* t_rhs = nullptr):
+        lhs(t_lhs),rhs(t_rhs),type(t_type){}
     virtual llvm::Value* codeGen(Context* context);
 };
+
+
+//Array
+class ArrayIndexAST:public ExpAST{
+public:
+    IdentifierExpAST * arrayName;
+    ExpAST * indexExp;
+    ArrayIndexAST(IdentifierExpAST* t_arrayName,ExpAST* t_indexExp):
+        arrayName(t_arrayName),indexExp(t_indexExp){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
+class ArrayAssignAST:public ExpAST{
+public:
+    ArrayIndexAST *index;
+    ExpAST* r_value;
+    ArrayAssignAST(ArrayIndexAST *idx,ExpAST* vl):
+        index(idx),r_value(vl){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
+class ArrayInitAST:public ExpAST{
+public:
+    VariableDecAST* arrayDec;
+    ExpressionList* list;
+    ArrayInitAST(VariableDecAST* dec,ExpressionList* lt):
+        arrayDec(dec),list(lt){}
+    virtual llvm::Value* codeGen(Context* context);
+};
+
+
 
 
 

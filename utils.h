@@ -23,6 +23,7 @@
 #define BINARY_OPT_LE 10 //<=
 #define BINARY_OPT_GE 11 //>=
 
+#define TYPE_ERROR -1
 #define TYPE_INT 0
 #define TYPE_CHAR 1
 
