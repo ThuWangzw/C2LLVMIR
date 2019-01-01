@@ -25,7 +25,7 @@ yacc:
 parser: lex yacc
 	clang++ -std=c++11 $(CPPFLAGS) $(LIBS) -o parser.out y.tab.cpp lex.yy.cpp AST.cpp codeGen.cpp parser.cpp
 
-compiler: $(OBJS)
+compiler: lex yacc $(OBJS)
 	clang++ $(CPPFLAGS) -o $@ $(OBJS) $(LIBS) y.tab.cpp lex.yy.cpp
 
 output:

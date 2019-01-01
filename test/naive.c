@@ -22,5 +22,7 @@ int main()
     //         result = 1;
     //     print(result);
 	// }
-    return 3&1;
+    int asd = 1+4*5;
+    int bsd = 2*7;
+    return asd + bsd;
 }

@@ -15,8 +15,6 @@ class Context;
 class FunctionDefAST;
 llvm::Type*  getType(int typeidt, Context* context);
 
-
-
 class AST{
 public:
     AST(){}
@@ -65,7 +63,7 @@ private:
 public:
     CharExpAST(char t_value):value(t_value){}
     ~CharExpAST(){}
-    virtual llvm::Value* codeGen(Context* context) {return nullptr;}
+    virtual llvm::Value* codeGen(Context* context);
     virtual json generateJson(){
         json j;
         j["type"] = "Char";
@@ -117,11 +115,8 @@ public:
     void setFunc(llvm::Function* parent);
     llvm::BasicBlock *BBCreate(Context* context);
     virtual json generateJson(){
-
         json j;
-        
         j["type"] = "Block";
-
         j["body"] = {};
         for (auto p = stmsAndExps.begin(); p != stmsAndExps.end(); p++) {
             j["body"].push_back((*p)->generateJson());
@@ -258,6 +253,7 @@ public:
     std::string name;
     bool isArray;
     uint64_t arrayLength;
+    std::string getName(){return name;};
     IdentifierExpAST(std::string t_name,int t_isArray = false,uint64_t t_arrayLength = 0):
         name(t_name),isArray(t_isArray),arrayLength(t_arrayLength){}
     virtual llvm::Value* codeGen(Context* context);
@@ -265,8 +261,8 @@ public:
         json j;
         j["type"] = "Identifier";
         j["name"] = name;
-        j['isArray'] = isArray;
-        j['arrayLength'] = arrayLength;
+        j["isArray"] = isArray;
+        j["arrayLength"] = arrayLength;
         return j;
     }
 };
@@ -279,6 +275,13 @@ public:
     VariableAssignAST(IdentifierExpAST* t_lhs, ExpAST* t_rhs):
         lhs(t_lhs),rhs(t_rhs){}
     virtual llvm::Value* codeGen(Context * context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "Assign";
+        j["ident"] = lhs->generateJson();
+        j["expr"] = rhs->generateJson();
+        return j;
+    }
 };
 
 
@@ -290,6 +293,13 @@ public:
     VariableDecAST(int t_type, IdentifierExpAST* t_lhs,ExpAST* t_rhs = nullptr):
         lhs(t_lhs),rhs(t_rhs),type(t_type){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "VarDec";
+        j["ident"] = lhs->generateJson();
+        j["expr"] = rhs->generateJson();
+        return j;
+    }
 };
 
 
@@ -301,6 +311,13 @@ public:
     ArrayIndexAST(IdentifierExpAST* t_arrayName,ExpAST* t_indexExp):
         arrayName(t_arrayName),indexExp(t_indexExp){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "ArrayIndex";
+        j["name"] = arrayName->generateJson();
+        j["index"] = indexExp->generateJson();
+        return j;
+    }
 };
 
 
@@ -311,6 +328,13 @@ public:
     ArrayAssignAST(ArrayIndexAST *idx,ExpAST* vl):
         index(idx),r_value(vl){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "ArrayAssign";
+        j["arrayIndex"] = index->generateJson();
+        j["expr"] = r_value->generateJson();
+        return j;
+    }
 };
 
 
@@ -321,6 +345,15 @@ public:
     ArrayInitAST(VariableDecAST* dec,ExpressionList* lt):
         arrayDec(dec),list(lt){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "ArrayInit";
+        j["arrayDec"] = arrayDec->generateJson();
+        j["exprs"] = {};
+        for (auto p = list->begin(); p != list->end(); p++)
+            j["exprs"].push_back((*p)->generateJson());
+        return j;
+    }
 };
 
 

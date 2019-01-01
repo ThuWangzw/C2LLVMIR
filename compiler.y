@@ -19,10 +19,10 @@
 	FunctionDecAST* function_dec;
 	IdentifierExpAST* identifier;
 	FunctionCallAST* function_call;
-	/* VariableDeclaration* var_dec; */
+	VariableDecAST* var_dec;
 	std::string* name;
 	int token;
-	std::vector<std::pair<int,std::string>> *var_dec_list;
+	std::vector<VariableDecAST*> *var_dec_list;
 	std::vector<ExpAST*> *call_list;
 	std::vector<AST*> *statement_list;
 }
@@ -63,14 +63,14 @@ translation_unit: external_declaration { $$ = new BlockAST(); $$->addAST($1); }
 /*外部声明，函数定义或声明*/
 external_declaration: function_definition { $<function_def>$ = $1;}
 	| function_declaration { $<function_dec>$ = $1; }
-	| variable_declaration SEMICOLON { /*$<var_dec>$ = $1;*/ }
+	| variable_declaration SEMICOLON { $<var_dec>$ = $1; }
 	;
 
 /*变量声明*/
 variable_declaration:
-	type_specifier identifier{/* $$ = new VariableDeclaration($1, $2, nullptr); */}
+	type_specifier identifier{ $$ = new VariableDecAST($1, $2, nullptr); }
 	| type_specifier identifier ASSIGN expression{
-		/* $$ = new VariableDeclaration($1, $2, $4); */
+		$$ = new VariableDecAST($1, $2, $4);
 	}
 	| type_specifier identifier LBRACKET CONSTANT RBRACKET{
 		// $5 as the size
@@ -87,7 +87,7 @@ function_declaration:
 		$$->setName($3->getName());
 		$$->setType($2);
 		for (auto p = $5->begin(); p != $5->end(); p++) {
-			$$->addArg(p->first, p->second);
+			$$->addArg((*p)->type, (*p)->lhs->name);
 		}
 	}
 	;
@@ -99,7 +99,7 @@ function_definition:
 		func_dec->setName($2->getName());
 		func_dec->setType($1);
 		for (auto p = $4->begin(); p != $4->end(); p++) {
-			func_dec->addArg(p->first, p->second);
+			func_dec->addArg((*p)->type, (*p)->lhs->name);
 		}
 		$$ = new FunctionDefAST(func_dec, $6);
 	}
@@ -107,8 +107,8 @@ function_definition:
 
 /*函数声明的参数*/
 func_decl_arguments:
-	/* blank */ { $$ = new std::vector<std::pair<int,std::string>>();}
-	| variable_declaration { $$ = new std::vector<std::pair<int,std::string>>(); $$->push_back($1); }
+	/* blank */ { $$ = new std::vector<VariableDecAST*>();}
+	| variable_declaration { $$ = new std::vector<VariableDecAST*>(); $$->push_back($1); }
 	| func_decl_arguments COMMA variable_declaration { $1->push_back($3); }
 	;
 
@@ -235,7 +235,7 @@ logical_or_expression:
 /*赋值语句*/
 expression:
 	logical_or_expression { $$ = $1; }
-	| unary_expression ASSIGN expression { /*$$ = new BinaryOptExpAST($2, $1, $3);*/ }
+	| identifier ASSIGN expression { $$ = new VariableAssignAST($1, $3); }
 	;
 
 /*类型规定*/
@@ -271,18 +271,22 @@ compound_statement:
 	| LBRACE declaration_list RBRACE {
 		$$ = new BlockAST();
 		// need VariableDeclaration
-		// for (auto p = $1->begin(); p != $1->end(); p++) $$->addAST()
+		for (auto p = $2->begin(); p != $2->end(); p++) $$->addAST(*p);
 	}
 	| LBRACE declaration_list statement_list RBRACE {
 		$$ = new BlockAST();
+		for (auto p = $2->begin(); p != $2->end(); p++) $$->addAST(*p);
 		for (auto p = $3->begin(); p != $3->end(); p++) $$->addAST(*p);
 	}
 	;
 
 /*声明部分*/
 declaration_list:
-	variable_declaration SEMICOLON{ /*$$ = $1;*/ }
-	| declaration_list variable_declaration SEMICOLON{ /* $1->push_back($2); */ }
+	variable_declaration SEMICOLON{
+		$$ = new std::vector<VariableDecAST*>();
+		$$->push_back($1);
+	}
+	| declaration_list variable_declaration SEMICOLON{ $1->push_back($2); }
 	;
 
 /*语句部分*/
