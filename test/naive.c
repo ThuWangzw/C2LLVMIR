@@ -22,7 +22,11 @@ int main()
     //         result = 1;
     //     print(result);
 	// }
-    int asd = 1+4*5;
-    int bsd = 2*7;
-    return asd + bsd;
+    // int asd = 1+4*5;
+    // int bsd = 2*7;
+    // return func(asd);
+    int a[100];
+    // a[0] = 1;
+    // return a[0];
+    return 0;
 }

@@ -40,9 +40,9 @@
       know about them.  */
    enum yytokentype {
      IDENTIFIER = 258,
-     CONSTANT = 259,
-     CHAR_CONSTANT = 260,
-     STRING_LITERAL = 261,
+     STRING_LITERAL = 259,
+     CONSTANT = 260,
+     CHAR_CONSTANT = 261,
      CHAR = 262,
      INT = 263,
      VOID = 264,
@@ -91,9 +91,9 @@
 #endif
 /* Tokens.  */
 #define IDENTIFIER 258
-#define CONSTANT 259
-#define CHAR_CONSTANT 260
-#define STRING_LITERAL 261
+#define STRING_LITERAL 259
+#define CONSTANT 260
+#define CHAR_CONSTANT 261
 #define CHAR 262
 #define INT 263
 #define VOID 264
@@ -153,6 +153,7 @@ typedef union YYSTYPE
 	FunctionDecAST* function_dec;
 	IdentifierExpAST* identifier;
 	FunctionCallAST* function_call;
+	ArrayIndexAST* array_index;
 	VariableDecAST* var_dec;
 	std::string* name;
 	int token;
@@ -161,7 +162,7 @@ typedef union YYSTYPE
 	std::vector<AST*> *statement_list;
 }
 /* Line 1529 of yacc.c.  */
-#line 165 "y.tab.hpp"
+#line 166 "y.tab.hpp"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
