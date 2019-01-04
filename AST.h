@@ -47,6 +47,7 @@ private:
 public:
     IntExpAST(int t_value):value(t_value){}
     ~IntExpAST(){}
+    int get_value(){return value;}
     virtual llvm::Value* codeGen(Context* context);
     virtual json generateJson(){
         json j;
@@ -204,6 +205,14 @@ public:
     IfExpAST(ExpAST* nCond, BlockAST* nThen, BlockAST* nElse):Cond(nCond), Then(nThen), Else(nElse){}
     ~IfExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "IfExp";
+        j["cond"] = Cond->generateJson();
+        j["then"] = Then->generateJson();
+        j["else"] = Else->generateJson();
+        return j;
+    }
 };
 
 class ForExpAST:public StmAST{
@@ -214,6 +223,15 @@ public:
     ForExpAST(ExpAST* ninit, ExpAST* ncond, ExpAST* nincre, BlockAST* nblock):init(ninit), cond(ncond), incre(nincre), block(nblock){}
     ~ForExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "ForExp";
+        if (init != nullptr) j["init"] = init->generateJson();
+        if (cond != nullptr) j["cond"] = cond->generateJson();
+        if (incre != nullptr) j["increase"] = incre->generateJson();
+        j["block"] = block->generateJson();
+        return j;
+    }
 };
 
 class WhileExpAST:public StmAST{
@@ -224,6 +242,13 @@ public:
     WhileExpAST(ExpAST* ncond, BlockAST* nblock):cond(ncond), block(nblock){}
     ~WhileExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "while";
+        j["cond"] = cond->generateJson();
+        j["block"] = block->generateJson();
+        return j;
+    }
 };
 
 class ReturnExpAST:public StmAST{
@@ -253,9 +278,10 @@ public:
     std::string name;
     bool isArray;
     uint64_t arrayLength;
-    std::string getName(){return name;};
+    std::string getName(){return name;}
     IdentifierExpAST(std::string t_name,int t_isArray = false,uint64_t t_arrayLength = 0):
         name(t_name),isArray(t_isArray),arrayLength(t_arrayLength){}
+    void setToArray(unsigned long long size){ isArray = true; arrayLength = size; }
     virtual llvm::Value* codeGen(Context* context);
     virtual json generateJson(){
         json j;
@@ -297,7 +323,7 @@ public:
         json j;
         j["type"] = "VarDec";
         j["ident"] = lhs->generateJson();
-        j["expr"] = rhs->generateJson();
+        if (rhs != nullptr) j["expr"] = rhs->generateJson();
         return j;
     }
 };

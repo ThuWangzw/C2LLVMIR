@@ -372,20 +372,22 @@ llvm::Value* ArrayIndexAST::codeGen(Context *context){
 
 
 llvm::Value* ArrayAssignAST::codeGen(Context *context){
+    // cout << "Array Assign" << endl;
     auto arrValue = context->getSymbol(this->index->arrayName->name);
     if(arrValue == nullptr){
+        cout << "symbol not found" << endl;
         return LogErrorV("Undeclared Variable");
     }
 
     auto arrPtr = context->builder.CreateLoad(arrValue,"arrayPtr");
-
+    
     if(!arrPtr->getType()->isArrayTy() && !arrPtr->getType()->isPointerTy()){
         return LogErrorV("Variable is not Array");
     }
 
     auto index = this->index->indexExp->codeGen(context);
     ArrayRef<Value*> indices= {ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
-    auto ptr = context->builder.CreateInBoundsGEP(arrPtr,indices,"elementPtr");
+    auto ptr = context->builder.CreateInBoundsGEP(arrValue,indices,"elementPtr");
     return context->builder.CreateAlignedStore(this->r_value->codeGen(context),ptr,4);
 }
 

@@ -19,6 +19,7 @@
 	FunctionDecAST* function_dec;
 	IdentifierExpAST* identifier;
 	FunctionCallAST* function_call;
+	ArrayIndexAST* array_index;
 	VariableDecAST* var_dec;
 	std::string* name;
 	int token;
@@ -27,7 +28,7 @@
 	std::vector<AST*> *statement_list;
 }
 
-%token <name> IDENTIFIER CONSTANT CHAR_CONSTANT STRING_LITERAL
+%token <name> IDENTIFIER STRING_LITERAL CONSTANT CHAR_CONSTANT
 %token <token> CHAR INT VOID EXTERN CHAR_PTR INT_PTR VOID_PTR
 %token <token> IF ELSE FOR WHILE CONTINUE BREAK RETURN
 %token <token> RIGHT_SHIFT LEFT_SHIFT
@@ -35,7 +36,7 @@
 %token <token> SEMICOLON LBRACE RBRACE COMMA ASSIGN LPAREN RPAREN LBRACKET RBRACKET
 %token <token> BIT_AND BIT_XOR BIT_OR BIT_NOT BIT_INVERSION MINUS PLUS MUL DIV MOD COM_L COM_G
 
-%type <block> program translation_unit external_declaration compound_statement expression_statement
+%type <block> program translation_unit external_declaration compound_statement
 %type <statement> statement iteration_statement jump_statement selection_statement
 %type <statement_list> statement_list
 %type <function_def> function_definition
@@ -44,7 +45,7 @@
 %type <identifier> identifier
 %type <var_dec_list> func_decl_arguments declaration_list
 %type <token> type_specifier unary_operator
-%type <expression> primary_expression postfix_expression unary_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression expression 
+%type <expression> primary_expression postfix_expression unary_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression expression expression_statement
 %type <call_list> argument_expression_list
 
 %start program
@@ -73,8 +74,11 @@ variable_declaration:
 		$$ = new VariableDecAST($1, $2, $4);
 	}
 	| type_specifier identifier LBRACKET CONSTANT RBRACKET{
-		// $5 as the size
-		/* $$ = new ArrayInitialization($1, $2, $4); */	
+		// array
+		int length = atoi($4->c_str());
+		if (length <= 0) yyerror("array length cannot be less than 0");
+		$2->setToArray(length);
+		$$ = new VariableDecAST($1, $2);
 	}
 	;
 
@@ -133,6 +137,7 @@ primary_expression:
 	| CHAR_CONSTANT { $$ = new CharExpAST((*$1)[0]); }
 	| STRING_LITERAL {/*字符串常数*/
 		/* $$ = new StringLiteral(*$1); */
+		$$ = nullptr;
     }
 	| LPAREN expression RPAREN { $$ = $2; }
 	;
@@ -140,7 +145,12 @@ primary_expression:
 /*后缀表达式*/
 postfix_expression:
 	primary_expression { $$ = $1; }
-	| identifier LBRACKET expression RBRACKET { /*数组调用*/ /* $$ = new ArrayIndex(); ... */ }
+	| identifier LBRACKET expression RBRACKET { 
+		/*数组调用*/
+		$1->setToArray(0);
+		ArrayIndexAST* arrayIndex = new ArrayIndexAST($1, $3);
+		$<array_index>$ = arrayIndex;
+	}
 	| identifier LPAREN argument_expression_list RPAREN {
         /*有参数的函数调用 (和定义一样，改为直接设置argument list) */
 		FunctionCallAST* func_call = new FunctionCallAST($1->getName());
@@ -236,6 +246,11 @@ logical_or_expression:
 expression:
 	logical_or_expression { $$ = $1; }
 	| identifier ASSIGN expression { $$ = new VariableAssignAST($1, $3); }
+	| identifier LBRACKET expression RBRACKET ASSIGN expression {
+		$1->setToArray(0);
+		ArrayIndexAST* arrayIndex = new ArrayIndexAST($1, $3);
+		$$ = new ArrayAssignAST(arrayIndex, $6);
+	}
 	;
 
 /*类型规定*/
@@ -255,7 +270,7 @@ identifier:
 /*声明*/
 statement:
 	compound_statement { $<block>$ = $1; }
-	| expression_statement { $<block>$ = $1; }
+	| expression_statement { $<expression>$ = $1; }
 	| selection_statement
 	| iteration_statement
 	| jump_statement { $$ = $1; }
@@ -298,7 +313,9 @@ statement_list:
 /*表达式语句*/
 expression_statement:
 	SEMICOLON { $$ = nullptr; }
-	| expression SEMICOLON { $$ = new BlockAST(); $$->addAST($1); }
+	| expression SEMICOLON { /*$$ = new BlockAST(); $$->addAST($1);*/
+		$$ = $1;
+	}
 	;
 
 /*条件语句*/
@@ -320,7 +337,9 @@ selection_statement:
 /*循环语句*/
 iteration_statement:
 	WHILE LPAREN expression RPAREN statement {
-		/* $$ = new WhileExpAST($3, $5); */
+		BlockAST* stmt_block = new BlockAST();
+		stmt_block->addAST($5);
+		$$ = new WhileExpAST($3, stmt_block);
 	}
 	| FOR LPAREN expression SEMICOLON expression SEMICOLON RPAREN statement {
 		BlockAST* stmt_block = new BlockAST();

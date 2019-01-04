@@ -1,6 +1,7 @@
 #include "context.h"
 #include "AST.h"
 #include "json.hpp"
+#include <fstream>
 
 using json = nlohmann::json;
 using namespace std;
@@ -14,9 +15,10 @@ int main(int argc,char* argv[]){
     yyin = fopen(argv[1],"r");
     yyparse();
     if (programBlock != nullptr) {
-        printf("\n=====\nGraph here:\n");
+        printf("\nParse Complete! See the result in output.json.\n");
         json j(programBlock->generateJson());
-        std::cout << j.dump(2) << std::endl;
+        ofstream outfile("output.json");
+        outfile << j.dump(2) << std::endl;
     }
     return 0;
 }

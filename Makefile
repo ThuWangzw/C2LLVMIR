@@ -1,4 +1,4 @@
-all: lex yacc compiler 
+all: lex yacc parser compiler 
 
 OBJS =  codeGen.o \
 		main.o	 \
@@ -11,7 +11,7 @@ LIBS = `$(LLVMCONFIG) --system-libs --libs core`
 clean:
 	$(RM) -rf $(OBJS) compiler
 	$(RM) -rf parser.out y.tab.cpp y.tab.hpp lex.yy.cpp y.output 
-	$(RM) -rf output.ll output.bc output.o output.out
+	$(RM) -rf output.ll output.bc output.o output.out output.json
 
 %.o: %.cpp
 	clang++ -fmodules -c $(CPPFLAGS) -o $@ $<
