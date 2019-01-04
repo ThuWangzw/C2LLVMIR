@@ -21,6 +21,7 @@
 	FunctionCallAST* function_call;
 	ArrayIndexAST* array_index;
 	VariableDecAST* var_dec;
+	GlobalVariableDecAST* glo_var_dec;
 	std::string* name;
 	int token;
 	std::vector<VariableDecAST*> *var_dec_list;
@@ -42,6 +43,7 @@
 %type <function_def> function_definition
 %type <function_dec> function_declaration
 %type <var_dec> variable_declaration
+%type <glo_var_dec> global_variable_declaration
 %type <identifier> identifier
 %type <var_dec_list> func_decl_arguments declaration_list
 %type <token> type_specifier unary_operator
@@ -64,9 +66,22 @@ translation_unit: external_declaration { $$ = new BlockAST(); $$->addAST($1); }
 /*外部声明，函数定义或声明*/
 external_declaration: function_definition { $<function_def>$ = $1;}
 	| function_declaration { $<function_dec>$ = $1; }
-	| variable_declaration SEMICOLON { $<var_dec>$ = $1; }
+	| global_variable_declaration SEMICOLON { $<glo_var_dec>$ = $1; }
 	;
-
+/*全局变量声明*/
+global_variable_declaration:
+	type_specifier identifier{ $$ = new GlobalVariableDecAST($1, $2, nullptr); }
+	| type_specifier identifier ASSIGN expression{
+		$$ = new GlobalVariableDecAST($1, $2, $4);
+	}
+	| type_specifier identifier LBRACKET CONSTANT RBRACKET{
+		// array
+		int length = atoi($4->c_str());
+		if (length <= 0) yyerror("array length cannot be less than 0");
+		$2->setToArray(length);
+		$$ = new GlobalVariableDecAST($1, $2);
+	}
+	;
 /*变量声明*/
 variable_declaration:
 	type_specifier identifier{ $$ = new VariableDecAST($1, $2, nullptr); }
@@ -134,9 +149,30 @@ argument_expression_list:
 primary_expression:
 	identifier { /*标识符*/ $<identifier>$ = $1; }
 	| CONSTANT { /*常数*/ $$ = new IntExpAST(atoi($1->c_str())); }
-	| CHAR_CONSTANT { $$ = new CharExpAST((*$1)[0]); }
+	| CHAR_CONSTANT {
+		char result;
+		std::string number_str;
+		int length = (*$1).size();
+		int status = 0;
+		if ((*$1)[1] == '\\') {
+			for (int i = 2; i < length && (*$1)[i] != '\''; i++)
+				number_str.push_back((*$1)[i]);
+			$$ = new CharExpAST((char)atoi(number_str.c_str()));
+		}
+		else $$ = new CharExpAST((*$1)[1]);
+	}
 	| STRING_LITERAL {/*字符串常数*/
-		$$ = new StringLiteralExpAST(*$1);
+		std::string result;
+		int length = (*$1).size();
+		int start = 0;
+		for (int i = 0; i < length; i++){
+			if (start == 0 && (*$1)[i] == '"') start = 1;
+			else if (start == 1 && (*$1)[i] == '"') break;
+			else if (start == 1){
+				result.push_back((*$1)[i]);
+			}
+		}
+		$$ = new StringLiteralExpAST(result);
     }
 	| LPAREN expression RPAREN { $$ = $2; }
 	;
@@ -319,36 +355,36 @@ expression_statement:
 
 /*条件语句*/
 selection_statement:
-	IF LPAREN expression RPAREN statement %prec LOWER_THAN_ELSE {
-		BlockAST* stmt_block = new BlockAST();
-		stmt_block->addAST($5);
-		$$ = new IfExpAST($3, stmt_block, nullptr);
+	IF LPAREN expression RPAREN compound_statement %prec LOWER_THAN_ELSE {
+		// BlockAST* stmt_block = new BlockAST();
+		// stmt_block->addAST($5);
+		$$ = new IfExpAST($3, $5, nullptr);
 	}
-	| IF LPAREN expression RPAREN statement ELSE statement {
-		BlockAST* if_stmt_block = new BlockAST();
-		if_stmt_block->addAST($5);
-		BlockAST* else_stmt_block = new BlockAST();
-		else_stmt_block->addAST($7);
-		$$ = new IfExpAST($3, if_stmt_block, else_stmt_block);
+	| IF LPAREN expression RPAREN compound_statement ELSE compound_statement {
+		// BlockAST* if_stmt_block = new BlockAST();
+		// if_stmt_block->addAST($5);
+		// BlockAST* else_stmt_block = new BlockAST();
+		// else_stmt_block->addAST($7);
+		$$ = new IfExpAST($3, $5, $7);
 	}
 	;
 
 /*循环语句*/
 iteration_statement:
-	WHILE LPAREN expression RPAREN statement {
-		BlockAST* stmt_block = new BlockAST();
-		stmt_block->addAST($5);
-		$$ = new WhileExpAST($3, stmt_block);
+	WHILE LPAREN expression RPAREN compound_statement {
+		// BlockAST* stmt_block = new BlockAST();
+		// stmt_block->addAST($5);
+		$$ = new WhileExpAST($3, $5);
 	}
-	| FOR LPAREN expression SEMICOLON expression SEMICOLON RPAREN statement {
-		BlockAST* stmt_block = new BlockAST();
-		stmt_block->addAST($8);
-		$$ = new ForExpAST($3, $5, nullptr, stmt_block);
+	| FOR LPAREN expression SEMICOLON expression SEMICOLON RPAREN compound_statement {
+		// BlockAST* stmt_block = new BlockAST();
+		// stmt_block->addAST($8);
+		$$ = new ForExpAST($3, $5, nullptr, $8);
 	}
-	| FOR LPAREN expression SEMICOLON expression SEMICOLON expression RPAREN statement {
-		BlockAST* stmt_block = new BlockAST();
-		stmt_block->addAST($9);
-		$$ = new ForExpAST($3, $5, $7, stmt_block);
+	| FOR LPAREN expression SEMICOLON expression SEMICOLON expression RPAREN compound_statement {
+		// BlockAST* stmt_block = new BlockAST();
+		// stmt_block->addAST($9);
+		$$ = new ForExpAST($3, $5, $7, $9);
 	}
 	;
 

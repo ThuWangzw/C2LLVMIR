@@ -6,6 +6,7 @@
 #include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IR/GlobalVariable.h>
 #include <iostream>
 #include "context.h"
 #include "AST.h"
@@ -33,7 +34,12 @@ Value* CharExpAST::codeGen(Context* context){
 }
 
 Value* StringLiteralExpAST::codeGen(Context* context){
-    return context->builder.CreateGlobalString(this->value, "string");
+    GlobalVariable* value = context->builder.CreateGlobalString(this->value, "string");
+    std::vector<Value*> indices;
+    indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+    indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+    auto ptr = context->builder.CreateInBoundsGEP(value,indices,"arrayPtr");
+    return ptr;
 }
 
 Value* BinaryOptExpAST::codeGen(Context* context) {
@@ -346,6 +352,7 @@ llvm::Value* IdentifierExpAST::codeGen(Context *context){
         if(arrayPtr->getType() -> isArrayTy()){
             std::vector<Value*> indices;
             indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+            indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
             auto ptr = context->builder.CreateInBoundsGEP(t_value,indices,"arrayPtr");
             return ptr;
         }
@@ -360,6 +367,7 @@ llvm::Value* VariableAssignAST::codeGen(Context *context){
         return LogErrorV("Undeclared Variables");
     }
     Value* r_value = this -> rhs ->codeGen(context);
+
     context->builder.CreateStore(r_value,l_value);
     return l_value;
 }
@@ -377,6 +385,36 @@ llvm::Value* VariableDecAST::codeGen(Context *context){
     }
     else{
         inst = context->builder.CreateAlloca(tp);
+    }
+    context->addSymbol(this->lhs->name,inst);
+    context->setSymbolType(this->lhs->name,this->type);
+
+    if(this->rhs != nullptr){
+        VariableAssignAST assign(this->lhs,this->rhs);
+        assign.codeGen(context);
+    }
+    return inst;
+}
+
+
+llvm::Value* GlobalVariableDecAST::codeGen(Context* context){
+    Type * tp = getType(this->type,context);
+    GlobalVariable *inst = nullptr;
+    if(this->lhs->isArray){
+        if(this->lhs->arrayLength <= 0){
+            return LogErrorV("Wrong Array Length");
+        }
+        auto arrayType = ArrayType::get(tp,this->lhs->arrayLength);
+        inst = new GlobalVariable(*context->theModule,arrayType,false,llvm::GlobalValue::CommonLinkage,0,this->lhs->name);
+        inst -> setAlignment(4);
+        auto init_value = ConstantArray::get(arrayType,0);
+        inst -> setInitializer(init_value);
+    }
+    else{
+        inst = new GlobalVariable(*context->theModule,tp,false,llvm::GlobalValue::CommonLinkage,0,this->lhs->name);
+        auto init_value = ConstantInt::get(tp, 0, true);
+        inst -> setAlignment(4);
+        inst -> setInitializer(init_value);
     }
     context->addSymbol(this->lhs->name,inst);
     context->setSymbolType(this->lhs->name,this->type);
@@ -432,7 +470,7 @@ llvm::Value* ArrayInitAST::codeGen(Context *context){
     auto arrPtr = this->arrayDec->codeGen(context);
     auto arrSize = this->arrayDec->lhs->arrayLength;
 
-    for(int i = 0; i < this->list->size(); i++){
+    for(unsigned long i = 0; i < this->list->size(); i++){
         IntExpAST* indexValue = new IntExpAST(i);
         ArrayIndexAST* id = new ArrayIndexAST(this->arrayDec->lhs,indexValue);
         ArrayAssignAST* asg = new ArrayAssignAST(id,this->list->at(i));

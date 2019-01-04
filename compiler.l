@@ -41,7 +41,7 @@ void comment();
 {L}({L}|{D})*		{ count(); SAVE_NAME; return(check_type()); /*标识符*/}
 
 {D}+{IS}?			{ count(); SAVE_NAME; return(CONSTANT); /*10进制*/}  
-L?'(\\.|[^\\'])+'	{ count(); SAVE_NAME; return(CHAR_CONSTANT); /*字符*/}
+'(\\.|[^\\'])+'	{ count(); SAVE_NAME; return(CHAR_CONSTANT); /*字符*/}
 
 L?\"(\\.|[^\\"])*\"	{ count(); SAVE_NAME; return(STRING_LITERAL); /*字符串*/}
 
