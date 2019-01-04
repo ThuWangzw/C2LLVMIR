@@ -84,7 +84,7 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
             rb->addAST(this->RHS);
             IfExpAST *ifexp = new IfExpAST(this->LHS, rb, elseb);
             ifexp->setNeed(true);
-            Value* addcon = context->builder.CreateICmpNE(ifexp->codeGen(context),ConstantInt::get(context->llvmContext, APInt(32,0)), "ifcond");
+            Value* addcon = context->builder.CreateICmpNE(ifexp->codeGen(context),ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
             return context->builder.CreateICmpNE(addcon,ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
         }
         case BINARY_OPT_LOGOR:{
@@ -98,7 +98,7 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
             rb->addAST(this->RHS);
             IfExpAST *ifexp = new IfExpAST(this->LHS, elseb, rb);
             ifexp->setNeed(true);
-            Value* addcon = context->builder.CreateICmpNE(ifexp->codeGen(context),ConstantInt::get(context->llvmContext, APInt(32,0)), "ifcond");
+            Value* addcon = context->builder.CreateICmpNE(ifexp->codeGen(context),ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
             return context->builder.CreateICmpNE(addcon,ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
         }
         default:
@@ -261,7 +261,7 @@ llvm::Value* IfExpAST::codeGen(Context* context){
     TheFunction->getBasicBlockList().push_back(mergebb);
     context->builder.SetInsertPoint(mergebb);
     if(this->needres){
-        PHINode *PN = context->builder.CreatePHI(getType(TYPE_INT, context), 2, "iftmp");
+        PHINode *PN = context->builder.CreatePHI(Type::getInt1Ty(context->llvmContext), 2, "iftmp");
 
         PN->addIncoming(ThenV, thenbb);
         PN->addIncoming(ElseV, elsebb);
@@ -280,9 +280,12 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     BasicBlock *PreheaderBB = context->builder.GetInsertBlock();
     this->block->setName("loop");
     this->block->setFunc(TheFunction);
-    BasicBlock* loop = this->block->BBCreate(context);
-    context->builder.CreateBr(loop);
-    context->builder.SetInsertPoint(loop);
+
+
+    BasicBlock *beforeLoop = BasicBlock::Create(context->llvmContext, "beforeloop", TheFunction);
+    context->builder.CreateBr(beforeLoop);
+    context->builder.SetInsertPoint(beforeLoop);
+    //
 
     //create end
     BasicBlock *AfterBB = BasicBlock::Create(context->llvmContext, "afterloop");
@@ -291,17 +294,21 @@ llvm::Value* ForExpAST::codeGen(Context *context){
         this->cond = new IntExpAST(1);
     }
     Value* CondV = this->cond->codeGen(context);
+
+    BasicBlock* loop = this->block->BBCreate(context);
     CondV = context->builder.CreateICmpNE(
             CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
-    //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
+    context->builder.SetInsertPoint(loop);
+    //choose cond
+
     if(!this->block->codeGen(context)){
         return  LogErrorV("for block error");
     }
 
     //incre and continue
     this->incre->codeGen(context);
-    context->builder.CreateBr(loop);
+    context->builder.CreateBr(beforeLoop);
     //after loop
 
     TheFunction->getBasicBlockList().push_back(AfterBB);
@@ -314,9 +321,13 @@ llvm::Value* WhileExpAST::codeGen(Context* context){
     BasicBlock *PreheaderBB = context->builder.GetInsertBlock();
     this->block->setName("loop");
     this->block->setFunc(TheFunction);
-    BasicBlock* loop = this->block->BBCreate(context);
-    context->builder.CreateBr(loop);
-    context->builder.SetInsertPoint(loop);
+
+
+    BasicBlock *beforeLoop = BasicBlock::Create(context->llvmContext, "beforeloop", TheFunction);
+    context->builder.CreateBr(beforeLoop);
+    context->builder.SetInsertPoint(beforeLoop);
+    //
+
     //create end
     BasicBlock *AfterBB = BasicBlock::Create(context->llvmContext, "afterloop");
     //add cond
@@ -324,15 +335,19 @@ llvm::Value* WhileExpAST::codeGen(Context* context){
         this->cond = new IntExpAST(1);
     }
     Value* CondV = this->cond->codeGen(context);
+
+    BasicBlock* loop = this->block->BBCreate(context);
     CondV = context->builder.CreateICmpNE(
             CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
-    //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
+    context->builder.SetInsertPoint(loop);
+
+    //choose cond
+
     if(!this->block->codeGen(context)){
-        return  LogErrorV("while block error");
+        return  LogErrorV("for block error");
     }
-    //continue
-    context->builder.CreateBr(loop);
+    context->builder.CreateBr(beforeLoop);
     //after loop
     TheFunction->getBasicBlockList().push_back(AfterBB);
     context->builder.SetInsertPoint(AfterBB);

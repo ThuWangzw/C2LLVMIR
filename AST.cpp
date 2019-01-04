@@ -23,6 +23,9 @@ llvm::Type*  getType(int typeidt, Context* context){
     if(typeidt == TYPE_CHAR_PTR){
         return Type::getInt8PtrTy(context->llvmContext);
     }
+    if(typeidt == TYPE_CHAR){
+        return Type::getInt8Ty(context->llvmContext);
+    }
     return nullptr;
 }
 
