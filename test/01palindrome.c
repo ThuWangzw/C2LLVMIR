@@ -1,4 +1,5 @@
-
+extern char* gets(char* s);
+extern char* puts(char* s);
 int main(){
     char s[100];  // 存放输入的字符串
     int i;
