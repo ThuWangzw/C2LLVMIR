@@ -1,65 +1,47 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
-/*next数组下标表示字符串长度，因此初始化要多初始化一个位置*/
-void compute_next(char *s, int *next)
-{
-    int i = 0, len = strlen(s);
-    int k = 0;
 
-    next[0] = next[1] = 0;
-    for(i = 1; i < len; i++)
+
+
+int main() {
+    char s[9] = "ababacaba";
+    char p[4] = "aba";
+    int pLength = strlen(p);
+    int prefix[100];
+    prefix[0]=0;
+    int k = 0;//前缀的长度
+    for(int i=1; i<pLength; i++)
     {
-        while(k > 0 && s[k] != s[i])
-            k = next[k];
-        if(s[k] == s[i])
-            k++;
-        next[i+1] = k;
-    }
-}
-
-char *kmp_strstr(char *s, char *t)
-{
-    int s_len, t_len, i, j=0;
-    int *next = NULL;
-
-    if(!s || !t)
-        return NULL;    
-
-    s_len = strlen(s);
-    t_len = strlen(t);
-    if(t_len == 0)
-        return s;
-    next = (int *)malloc(sizeof(int) * (t_len + 1));
-    if(!next)
-        return NULL;
-
-    compute_next(t, next);
-
-    for(i = 0; i < s_len; i++)
-    {
-        while(j > 0 && s[i] != t[j])
-            j = next[j];
-        if(s[i] == t[j])
-            j++;
-        if(j == t_len)
+        while(k>0&&p[k]!=p[i])
         {
-            //printf("match %d\n", i-j+1);
-            free(next);
-            return s+i-j+1;
+            k=prefix[k-1];
+        }
+        if(p[k]==p[i])//说明p[0...k-1]共k个都匹配了
+        {
+            k=k+1;
+        }
+        prefix[i]=k;
+    }
+    int pPoint=0;
+    int sLength = strlen(s);
+    for(int i=0; i<=sLength-pLength;i++)
+    {
+        while(pPoint!=0&&(s[i]!=p[pPoint]))
+        {
+            pPoint = prefix[pPoint-1];
+        }
+        if(s[i]==p[pPoint])
+        {
+            pPoint++;
+            if(pPoint == pLength)
+            {
+                printf("找到:%d \n",i-pPoint+1);
+                //pPoint = 0;//上一个在s匹配的字符串,不能成为下一个匹配字符串的一部分
+                pPoint=prefix[pPoint-1];//上一个在s匹配的字符串,也能成为下一个匹配字符串的一部分
+            }
         }
     }
-
-    free(next);
-    return NULL;
-}
-
-int main(int argc, char *argv[])
-{
-    char *s;
-    s = kmp_strstr(argv[1], argv[2]);
-    printf("%s\n", s?s:"NULL");
-    printf("%s\n", strstr(argv[1], argv[2])?:"NULl");
     return 0;
 }

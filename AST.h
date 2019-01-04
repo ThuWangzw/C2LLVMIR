@@ -218,9 +218,11 @@ private:
     BlockAST* Then;//needed
     BlockAST* Else;//needed maybe nullptr
     BlockAST* Merge;
+    int needres;
 public:
-    IfExpAST(ExpAST* nCond, BlockAST* nThen, BlockAST* nElse):Cond(nCond), Then(nThen), Else(nElse){}
+    IfExpAST(ExpAST* nCond, BlockAST* nThen, BlockAST* nElse):Cond(nCond), Then(nThen), Else(nElse), needres(false){}
     ~IfExpAST(){}
+    void setNeed(int newneed){needres = newneed;}
     virtual llvm::Value* codeGen(Context* context);
     virtual json generateJson(){
         json j;

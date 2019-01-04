@@ -6,4 +6,6 @@ test.*
 *.out
 .DS_Store
 .vscode/
-
+*.ll
+*.output
+*.bc
