@@ -22,11 +22,12 @@
 #define BINARY_OPT_GT COM_G //>
 #define BINARY_OPT_LE COM_LE //<=
 #define BINARY_OPT_GE COM_GE //>=
-#define BINARY_OPT_LOGAND 999
-#define BINARY_OPT_LOGOR 2
+#define BINARY_OPT_LOGAND LOGIC_AND
+#define BINARY_OPT_LOGOR LOGIC_OR
 
 #define TYPE_INT INT
 #define TYPE_CHAR CHAR
+#define TYPE_CHAR_PTR CHAR_PTR
 #define TYPE_ERROR -1
 
 int LogError(const char* errstr);
