@@ -274,9 +274,12 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     BasicBlock *PreheaderBB = context->builder.GetInsertBlock();
     this->block->setName("loop");
     this->block->setFunc(TheFunction);
-    BasicBlock* loop = this->block->BBCreate(context);
-    context->builder.CreateBr(loop);
-    context->builder.SetInsertPoint(loop);
+
+
+    BasicBlock *beforeLoop = BasicBlock::Create(context->llvmContext, "beforeloop", TheFunction);
+    context->builder.CreateBr(beforeLoop);
+    context->builder.SetInsertPoint(beforeLoop);
+    //
 
     //create end
     BasicBlock *AfterBB = BasicBlock::Create(context->llvmContext, "afterloop");
@@ -285,17 +288,24 @@ llvm::Value* ForExpAST::codeGen(Context *context){
         this->cond = new IntExpAST(1);
     }
     Value* CondV = this->cond->codeGen(context);
+
+    BasicBlock* loop = this->block->BBCreate(context);
     CondV = context->builder.CreateICmpNE(
             CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
-    //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
+    context->builder.SetInsertPoint(loop);
+
+
+
+    //choose cond
+
     if(!this->block->codeGen(context)){
         return  LogErrorV("for block error");
     }
 
     //incre and continue
     this->incre->codeGen(context);
-    context->builder.CreateBr(loop);
+    context->builder.CreateBr(beforeLoop);
     //after loop
 
     TheFunction->getBasicBlockList().push_back(AfterBB);

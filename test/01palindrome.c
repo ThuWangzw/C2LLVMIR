@@ -12,27 +12,27 @@ int main(){
         1;
     }
     //gets(s);
-    for(i=0;(i<100)&&(zeroflag);i = i + 1)
-    {
-        if(1){
-            n = i;
-            zeroflag = 0;
-        }
-    }
+//    for(i=0;(i<100)&&(zeroflag);i = i + 1)
+//    {
+//        if(1){
+//            n = i;
+//            zeroflag = 0;
+//        }
+//    }
     i=0;
-    j=n-1;
-    while ((i<=j)||flag) {
-
-        if(i==j){
-            flag = 0;
-            //printf("不是回文串\n");
-        }
-        if(i==j){
-            //printf("是回文串\n");
-            1;
-        }
-        i = i + 1;
-        j = j - 1;
-    }
+    j=2;
+//    while ((i<=j)&&flag) {
+//
+//        if(i==j){
+//            flag = 0;
+//            //printf("不是回文串\n");
+//        }
+//        if(i==j){
+//            //printf("是回文串\n");
+//            1;
+//        }
+//        i = i + 1;
+//        j = j - 1;
+//    }
     return 0;
 }

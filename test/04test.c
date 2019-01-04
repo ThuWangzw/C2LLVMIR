@@ -5,8 +5,8 @@ int main(){
 //    char c;
 //    int d[100];
     int a;
-    if(a==1){
-        a = 200;
+    for(a=1;a<10;a = a + 1){
+        1000;
     }
     return 0;
 }
