@@ -136,8 +136,7 @@ primary_expression:
 	| CONSTANT { /*常数*/ $$ = new IntExpAST(atoi($1->c_str())); }
 	| CHAR_CONSTANT { $$ = new CharExpAST((*$1)[0]); }
 	| STRING_LITERAL {/*字符串常数*/
-		/* $$ = new StringLiteral(*$1); */
-		$$ = nullptr;
+		$$ = new StringLiteralExpAST(*$1);
     }
 	| LPAREN expression RPAREN { $$ = $2; }
 	;

@@ -32,6 +32,10 @@ Value* CharExpAST::codeGen(Context* context){
     return ConstantInt::get(Type::getInt8Ty(context->llvmContext), this->value, true);
 }
 
+Value* StringLiteralExpAST::codeGen(Context* context){
+    return context->builder.CreateGlobalString(this->value, "string");
+}
+
 Value* BinaryOptExpAST::codeGen(Context* context) {
     Value *L = this->LHS->codeGen(context);
     Value *R = this->RHS->codeGen(context);
