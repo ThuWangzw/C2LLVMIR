@@ -178,7 +178,7 @@ llvm::Value* IfExpAST::codeGen(Context* context){
     }
     //if cond
     CondV = context->builder.CreateICmpNE(
-            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "ifcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
     Function *TheFunction = context->builder.GetInsertBlock()->getParent();
     // Create blocks for the then and else cases.  Insert the 'then' block at the
     // end of the function.
@@ -246,7 +246,7 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){
@@ -279,7 +279,7 @@ llvm::Value* WhileExpAST::codeGen(Context* context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){
