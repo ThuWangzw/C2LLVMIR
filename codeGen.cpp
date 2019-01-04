@@ -34,7 +34,12 @@ Value* CharExpAST::codeGen(Context* context){
 }
 
 Value* StringLiteralExpAST::codeGen(Context* context){
-    return context->builder.CreateGlobalString(this->value, "string");
+    GlobalVariable* value = context->builder.CreateGlobalString(this->value, "string");
+    std::vector<Value*> indices;
+    indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+    indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+    auto ptr = context->builder.CreateInBoundsGEP(value,indices,"arrayPtr");
+    return ptr;
 }
 
 Value* BinaryOptExpAST::codeGen(Context* context) {
@@ -78,6 +83,7 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
             BlockAST *rb = new BlockAST(string("right"));
             rb->addAST(this->RHS);
             IfExpAST *ifexp = new IfExpAST(this->LHS, rb, elseb);
+            ifexp->setNeed(true);
             return ifexp->codeGen(context);
         }
         case BINARY_OPT_LOGOR:{
@@ -90,6 +96,7 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
             BlockAST *rb = new BlockAST(string("right"));
             rb->addAST(this->RHS);
             IfExpAST *ifexp = new IfExpAST(this->LHS, elseb, rb);
+            ifexp->setNeed(true);
             return ifexp->codeGen(context);
         }
         default:
@@ -237,23 +244,26 @@ llvm::Value* IfExpAST::codeGen(Context* context){
     }
     context->builder.CreateBr(mergebb);
     // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
-    thenbb = context->builder.GetInsertBlock();
+    //thenbb = context->builder.GetInsertBlock();
 
     // Emit else block.
     TheFunction->getBasicBlockList().push_back(elsebb);
     Value *ElseV = this->Else->codeGen(context);
     context->builder.CreateBr(mergebb);
     // Codegen of 'Else' can change the current block, update ElseBB for the PHI.
-    elsebb = context->builder.GetInsertBlock();
+    //elsebb = context->builder.GetInsertBlock();
 
     // Emit merge block.
     TheFunction->getBasicBlockList().push_back(mergebb);
     context->builder.SetInsertPoint(mergebb);
-    PHINode *PN = context->builder.CreatePHI(getType(TYPE_INT, context), 2, "iftmp");
+    if(this->needres){
+        PHINode *PN = context->builder.CreatePHI(getType(TYPE_INT, context), 2, "iftmp");
 
-    PN->addIncoming(ThenV, thenbb);
-    PN->addIncoming(ElseV, elsebb);
-    return PN;
+        PN->addIncoming(ThenV, thenbb);
+        PN->addIncoming(ElseV, elsebb);
+        return PN;
+    }
+    return nullptr;
 }
 
 llvm::Value* ForExpAST::codeGen(Context *context){
@@ -278,7 +288,7 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(32,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){
@@ -311,7 +321,7 @@ llvm::Value* WhileExpAST::codeGen(Context* context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(32,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){
@@ -341,6 +351,7 @@ llvm::Value* IdentifierExpAST::codeGen(Context *context){
         //array type
         if(arrayPtr->getType() -> isArrayTy()){
             std::vector<Value*> indices;
+            indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
             indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
             auto ptr = context->builder.CreateInBoundsGEP(t_value,indices,"arrayPtr");
             return ptr;

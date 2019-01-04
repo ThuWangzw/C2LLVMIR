@@ -1,9 +1,9 @@
-//extern char* gets(char* s);
-
+extern char* gets(char* s);
+extern char* puts(char* s);
 int main()
 {
-    char a[100];
-    a[3];
-    return 0;
-    // return 0;
+    int a[100];
+    a[0] = 199;
+    return a[0];
 }
+

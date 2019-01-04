@@ -134,9 +134,30 @@ argument_expression_list:
 primary_expression:
 	identifier { /*标识符*/ $<identifier>$ = $1; }
 	| CONSTANT { /*常数*/ $$ = new IntExpAST(atoi($1->c_str())); }
-	| CHAR_CONSTANT { $$ = new CharExpAST((*$1)[0]); }
+	| CHAR_CONSTANT {
+		char result;
+		std::string number_str;
+		int length = (*$1).size();
+		int status = 0;
+		if ((*$1)[1] == '\\') {
+			for (int i = 2; i < length && (*$1)[i] != '\''; i++)
+				number_str.push_back((*$1)[i]);
+			$$ = new CharExpAST((char)atoi(number_str.c_str()));
+		}
+		else $$ = new CharExpAST((*$1)[1]);
+	}
 	| STRING_LITERAL {/*字符串常数*/
-		$$ = new StringLiteralExpAST(*$1);
+		std::string result;
+		int length = (*$1).size();
+		int start = 0;
+		for (int i = 0; i < length; i++){
+			if (start == 0 && (*$1)[i] == '"') start = 1;
+			else if (start == 1 && (*$1)[i] == '"') break;
+			else if (start == 1){
+				result.push_back((*$1)[i]);
+			}
+		}
+		$$ = new StringLiteralExpAST(result);
     }
 	| LPAREN expression RPAREN { $$ = $2; }
 	;
@@ -328,7 +349,7 @@ selection_statement:
 		BlockAST* if_stmt_block = new BlockAST();
 		if_stmt_block->addAST($5);
 		BlockAST* else_stmt_block = new BlockAST();
-		else_stmt_block->addAST($5);
+		else_stmt_block->addAST($7);
 		$$ = new IfExpAST($3, if_stmt_block, else_stmt_block);
 	}
 	;
