@@ -118,6 +118,7 @@ private:
     llvm::Function* func;
     bool bbCreated;
     llvm::BasicBlock* bblock;
+
 public:
     BlockAST():func(nullptr), bbCreated(false){}
     BlockAST(std::string str):blockName(str), func(nullptr), bbCreated(false){}
@@ -226,7 +227,7 @@ public:
         j["type"] = "IfExp";
         j["cond"] = Cond->generateJson();
         j["then"] = Then->generateJson();
-        j["else"] = Else->generateJson();
+        if (Else != nullptr) j["else"] = Else->generateJson();
         return j;
     }
 };

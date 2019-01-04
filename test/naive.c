@@ -1,4 +1,4 @@
-extern char* puts(char* s);
+// extern char* puts(char* s);
 // int fff(int a){
 //     // int b = a;
 //     // a = 3;
@@ -8,8 +8,12 @@ extern char* puts(char* s);
 // int a = 1;
 int main()
 {
-    // char a[100];
-    puts("leiyiran");
+    int a[100];
+    a[0] = 1;
+    if ((a[0]) > 0){
+        a[0] = 7;
+    }
+    // puts("leiyiran");
     // return 133;
-    return 0;
+    return a[0];
 }
