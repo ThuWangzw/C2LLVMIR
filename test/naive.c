@@ -6,3 +6,4 @@ int main()
     a[0] = 199;
     return a[0];
 }
+
