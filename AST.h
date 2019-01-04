@@ -205,6 +205,14 @@ public:
     IfExpAST(ExpAST* nCond, BlockAST* nThen, BlockAST* nElse):Cond(nCond), Then(nThen), Else(nElse){}
     ~IfExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "IfExp";
+        j["cond"] = Cond->generateJson();
+        j["then"] = Then->generateJson();
+        j["else"] = Else->generateJson();
+        return j;
+    }
 };
 
 class ForExpAST:public StmAST{
@@ -215,6 +223,15 @@ public:
     ForExpAST(ExpAST* ninit, ExpAST* ncond, ExpAST* nincre, BlockAST* nblock):init(ninit), cond(ncond), incre(nincre), block(nblock){}
     ~ForExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "ForExp";
+        if (init != nullptr) j["init"] = init->generateJson();
+        if (cond != nullptr) j["cond"] = cond->generateJson();
+        if (incre != nullptr) j["increase"] = incre->generateJson();
+        j["block"] = block->generateJson();
+        return j;
+    }
 };
 
 class WhileExpAST:public StmAST{
@@ -225,6 +242,13 @@ public:
     WhileExpAST(ExpAST* ncond, BlockAST* nblock):cond(ncond), block(nblock){}
     ~WhileExpAST(){}
     virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "while";
+        j["cond"] = cond->generateJson();
+        j["block"] = block->generateJson();
+        return j;
+    }
 };
 
 class ReturnExpAST:public StmAST{
@@ -299,7 +323,7 @@ public:
         json j;
         j["type"] = "VarDec";
         j["ident"] = lhs->generateJson();
-        j["expr"] = rhs->generateJson();
+        if (rhs != nullptr) j["expr"] = rhs->generateJson();
         return j;
     }
 };

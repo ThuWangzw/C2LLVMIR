@@ -36,7 +36,7 @@
 %token <token> SEMICOLON LBRACE RBRACE COMMA ASSIGN LPAREN RPAREN LBRACKET RBRACKET
 %token <token> BIT_AND BIT_XOR BIT_OR BIT_NOT BIT_INVERSION MINUS PLUS MUL DIV MOD COM_L COM_G
 
-%type <block> program translation_unit external_declaration compound_statement expression_statement
+%type <block> program translation_unit external_declaration compound_statement
 %type <statement> statement iteration_statement jump_statement selection_statement
 %type <statement_list> statement_list
 %type <function_def> function_definition
@@ -45,7 +45,7 @@
 %type <identifier> identifier
 %type <var_dec_list> func_decl_arguments declaration_list
 %type <token> type_specifier unary_operator
-%type <expression> primary_expression postfix_expression unary_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression expression
+%type <expression> primary_expression postfix_expression unary_expression multiplicative_expression additive_expression shift_expression relational_expression equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression expression expression_statement
 %type <call_list> argument_expression_list
 
 %start program
@@ -270,7 +270,7 @@ identifier:
 /*声明*/
 statement:
 	compound_statement { $<block>$ = $1; }
-	| expression_statement { $<block>$ = $1; }
+	| expression_statement { $<expression>$ = $1; }
 	| selection_statement
 	| iteration_statement
 	| jump_statement { $$ = $1; }
@@ -313,7 +313,9 @@ statement_list:
 /*表达式语句*/
 expression_statement:
 	SEMICOLON { $$ = nullptr; }
-	| expression SEMICOLON { $$ = new BlockAST(); $$->addAST($1); }
+	| expression SEMICOLON { /*$$ = new BlockAST(); $$->addAST($1);*/
+		$$ = $1;
+	}
 	;
 
 /*条件语句*/
