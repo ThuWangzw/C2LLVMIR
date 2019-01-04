@@ -14,10 +14,12 @@ int main(int argc,char* argv[]){
 
     yyin = fopen(argv[1],"r");
     yyparse();
-    printf("\n=====\nParse Finished\n=====\n");
-    // printf("program block: %d", programBlock);
-    Value* res = programBlock->codeGen(ctx);
-    cout<<endl;
-    ctx->theModule->print(errs(), nullptr);
+    if (programBlock != nullptr) {
+        printf("\n=====\nParse Finished\n=====\n");
+        // printf("program block: %d", programBlock);
+        Value* res = programBlock->codeGen(ctx);
+        cout<<endl;
+        ctx->theModule->print(errs(), nullptr);
+    }
     return 0;
 }
