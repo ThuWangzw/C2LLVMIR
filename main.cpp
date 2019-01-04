@@ -14,7 +14,7 @@ extern int yyparse();
 
 int main(int argc,char* argv[]){
     Context *ctx = new Context();
-    int fd = open("output.ll",O_WRONLY || O_CREAT);
+    int fd = open("output.ll",O_WRONLY | O_CREAT);
     if(fd<0)cout<<"errorfile";
     raw_fd_ostream ofs(fd, false);
     yyin = fopen(argv[1],"r");

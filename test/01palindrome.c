@@ -1,24 +1,31 @@
-#include <stdio.h>
-#include <string.h>
-#include <string.h>
+
 int main(){
-    char s[100];  // 存放输入的字符串 
+    char s[100];  // 存放输入的字符串
     int i;
     int j;
     int n;
-    gets(s);
-    
-    n=strlen(s);
+    int flag = 1;
+    int zeroflag = 1;
+    for(i=0;i<100;i++){
+        s[i] = 0;
+    }
+    //gets(s);
+    for(i=0;(i<100)&&(zeroflag);i++){
+        if(s[i] == 0){
+            n = i;
+            zeroflag = 0;
+        }
+    }
     i=0;
     j=n-1;
-    while (i<=j) {
-        if(i==j){
-            //printf("是回文串\n");
-            break;
-        }
+    while ((i<=j)&&flag) {
+
         if(s[i]!=s[j]){
+            flag = 0;
             //printf("不是回文串\n");
-            break;
+        }
+        else if(i==j){
+            //printf("是回文串\n");
         }
         i = i + 1;
         j = j - 1;

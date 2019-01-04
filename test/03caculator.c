@@ -1,213 +1,54 @@
 #include<stdio.h>
-#include<ctype.h>
 #include<string.h>
-#include<stdlib.h>
-#include<math.h>
-
-
-/**************************************************************************
-int CheckNum(char *c)
-ÊäÈë²ÎÊý£º
-    char *c: ÊäÈëµÄ×Ö·û´®
-·µ»Ø²ÎÊý£º
-    0£º×Ö·û´®ÖÐÓÐ²»·ûºÏ¹æ¶¨µÄ×Ö·û
-    1: ×Ö·û´®×Ö·û·ûºÏ¹æ¶¨£¬Ã»ÓÐ²»·ûºÏ¹æ¶¨µÄ×Ö·û.
-¹¦ÄÜ£º
-    ¼ì²é×Ö·û´®ÖÐÓÐ·ñ³ýÁË 0-9, +,-,*,/,(,),Ö®ÍâµÄÆäËû×Ö·û£¬
-    Èç¹ûÓÐ£¬Ôò·µ»Ø0, ±íÊ¾³öÏÖ´íÎó¡£
-    ÈôÃ»ÓÐ£¬Ôò·µ»Ø1,×Ö·û´®ÄÚÈÝºÏ·¨¡£
-**************************************************************************/
-int CheckNum(char *c)
+int main(void)
 {
-    char *s=c;
-    while(*s!='\0'){
-        if((*s>='0' && *s<='9') || *s=='+' ||*s=='-' || *s=='*' || *s=='/' ||*s=='.' || *s=='(' ||  *s==')' ){
-            s++;
-        }else{
-            printf("´íÎó:Êý×Ö %s ÀïÃæÓÐ²»·ûºÏ¹æ·¶µÄ×Ö·û¡£\n",c);
-            return 0;
-        }
-    }
-    return 1;
-}
+    char string[100];
+    int index = 1;
+    int sum = 0;
+    int temval = 1;
+    char ope, c,inope;
+    memset(string, 0, 100);
+    scanf("%s",string);
 
-/**************************************************************************
-double StrToNum(char *c)
-ÊäÈë²ÎÊý£º
-    char *c :ÓÉÊý×ÖºÍÐ¡Êýµã×é³ÉµÄ×Ö·û£¬ÓÃÒÔ×ª»»³ÉdoubleÐÍµÄÊýÖµ¡£
-·µ»Ø²ÎÊý£º
-    num:·µ»Ø×ª»»ºÃµÄÖµ¡£
-¹¦ÄÜ£º
-    ½«ÊäÈëµÄ×Ö·û´®×ª»¯³ÉDoubleÐÍµÄ¸¡µãÊý
-***************************************************************************/
-double StrToNum(char *c)
-{
-    if(CheckNum(c)==0){
-        return -1;
-    }
-    double num=0;
-    int len=strlen(c);
-    int start=0,fla=1;  //startÊÇ×Ö·û´®µÄÊý×Ö¿ªÊ¼µÄÎ»ÖÃ£¬fla±ê¼ÇÊÇ·ñÊÇ¸ºÊý
-    if(*c=='-'){
-        start=1;
-        fla=-1;
-    }
-    num=c[start]-'0';
-    int t=-1;  //Ð¡Êý²¿·Ö¼ÆËã¹ý³ÌÖÐ10µÄÖ¸Êý²¿·ÖµÄÖµ
-    bool hasPoint=false;
-    for(int i=start+1;i<len;i++){
-        if(c[i]=='.'){
-            hasPoint=true;
-            continue;
-        }
-        if(hasPoint){
-            num=num+(c[i]-'0')*pow(10,t);
-            t--;
-        }else{
-            num=num*10+c[i]-'0';
-        }
-    }
-    return num*fla;
-}
-
-/**************************************************************************
-int MyRemove(char *s,int len,int index){
-ÊäÈë²ÎÊý£º
-    char *s :ÊäÈëµÄ×Ö·û´®
-    int len :×Ö·û´®µÄ³¤¶È
-    int index:ÐèÒªÒÆ¶¯µÄÆðÊ¼Î»ÖÃ
-¹¦ÄÜ£º
-    ½«ÊäÈëµÄ×Ö·û´®¸ÃÎ»ÖÃµÄ×Ö·ûÉ¾µô£¬ÒÆ¶¯ºóÃæµÄ×Ö·ûÎ»ÖÃ
-***************************************************************************/
-int MyRemove(char *s,int len,int index){
-    int i;
-    for(i=index;i<len-1;i++){
-        s[i]=s[i+1];
-    }
-    s[i]='\0';
-    return len-1;
-}
-
-/**************************************************************************
-int MyRemove(double *s,int len,int index){
-ÊäÈë²ÎÊý£º
-    char *s :ÊäÈëµÄÊý×é
-    int len :Êý×éµÄ³¤¶È
-    int index:ÐèÒªÒÆ¶¯µÄÆðÊ¼Î»ÖÃ
-¹¦ÄÜ£º
-    ½«ÊäÈëµÄÊý×é¸ÃÎ»ÖÃµÄÊý×ÖÉ¾µô£¬ÒÆ¶¯ºóÃæµÄÊý×ÖÎ»ÖÃ
-***************************************************************************/
-int MyRemove(double *s,int len,int index){
-    for(int i=index;i<len-1;i++){
-        s[i]=s[i+1];
-    }
-    return len-1;
-}
-
-/**************************************************************************
-double MyCalculate(char *c)
-ÊäÈë²ÎÊý£º
-    char *c :¼´½«½øÐÐÔËËãµÄ×Ö·û´®ÐÍÊýÑ§±í´ïÊ½¡£Èç3.5+(2*3/5)
-·µ»Ø²ÎÊý£º
-    s[0]:¼ÆËã½á¹û½«·ÅÈës[0]ÖÐ
-¹¦ÄÜ£º
-    ½«ÊäÈëµÄ×Ö·û´®ÖÐµÄÊý×Ö·Ö±ðµ÷ÓÃconvnum(char *c)º¯Êý½øÐÐÊýÖµ±ä»»£¬ÔÙ½«ÆäÒÀ
-    ´Î´æÈëdoulbe s[i]ÖÐ£¬½«¼Ó¼õ³Ë³ýÔËËã·ûÒÀ´Î´æÈë×Ö·û´®·ûºÅÊý×é char f[i]ÖÐ£¬
-    È»ºóÈç¹ûÓöµ½À¨ºÅ£¬Ôò½«À¨ºÅÄÚµÄ×Ö·û´®´æÈëÁíÒ»×Ö·ûÊý×éÖÐ£¬È»ºóÓÃ´Ë
-    good(char *c) µÝ¹éº¯Êý½øÐÐµÝ¹éÔËËã¡£ È»ºó¸ù¾ÝÏÈ³Ë³ý£¬ºó¼Ó¼õµÄË³Ðò¶ÔÒÑ
-    ´æÈëÊý×éµÄÊýÖµ¸ù ¾Ý´æÈë×Ö·û´®·ûºÅÊý×éµÄÔËËã·û½øÐÐÔËËã¡£½á¹û´æÈës[0]ÖÐ¡£
-    ·µ»Ø×îÖÕ½á¹û¡£
-***************************************************************************/
-double MyCalculate(char *c)
-{
-    //puts(c);
-    double digit[100];  //ËÄÔòÔËËãµÄÊý×Ö
-    char symbol[100];   //ËÄÔòÔËËãµÄ·ûºÅ
-    int di=0;  //±£´æÊý×ÖÊý×éµÄÐòºÅ
-    int si=0;  //±£´æ×Ö·ûÊý×éµÄÐòºÅ
-    int ni=0;  //¼ÇÂ¼ÐèÒª×ª»¯³ÉÊý×ÖµÄ×Ö·û´®µÄÐòºÅ
-    while(*c!='\0'){
-
-        char num[22];
-        switch(*c){
-            case '+':
-            case '-':
-            case '*':
-            case '/':
-                symbol[si++]=*c;
-                if(*(c-1)!=')'){
-                    num[ni]='\0';
-                    ni=0;
-                    digit[di++]=StrToNum(num);
-                }
+    sum += (string[0] - 48);
+    while(string[index] != '\0')
+    {
+        c = string[index];
+        switch(c)
+        {
+            case '+':ope = '+';index++;
                 break;
-            case '(':
+            case '-':ope = '-';index++;
+                break;
+            case '*':ope = '*';index++;
+                break;
+            case '/':ope = '/';index++;
+                break;
+            default:temval = c - 48;index++;
+                while(string[index] != '+' && string[index] != '-'&&string[index] != '\0')
                 {
-                    int k=1;
-                    char str[100];
-                    int j=0;
-                    while(k>0){
-                        c++;
-                        str[j++]=*c;
-                        if(*c=='('){
-                            k++;
-                        }else if(*c==')'){
-                            k--;
-                        }
-
+                    inope = string[index];
+                    if(inope == '*')
+                    {
+                        temval *= (string[++index] - 48);
+                        index++;
                     }
-                    str[j-1]='\0';
-                    digit[di++]=MyCalculate(str);
-                    break;
+                    if(inope == '/')
+                    {
+                        temval /= (string[++index] - 48);
+                        index++;
+                    }
                 }
-            default:
-                num[ni++]=*c;
-                if(*(c+1)=='\0'){
-                    num[ni]='\0';
-                    ni=0;
-                    digit[di++]=StrToNum(num);
+                if(ope =='+')
+                {
+                    sum +=temval;
                 }
-                break;
-        }
-        c++;
-    }
-    symbol[si]='\0';
-    for(int i=0;i<si;i++){
-        if(symbol[i]=='*'){
-            digit[i+1]=digit[i]*digit[i+1];
-            di=MyRemove(digit,di,i);
-            si=MyRemove(symbol,si,i);
-        }else if(symbol[i]=='/'){
-            digit[i+1]=digit[i]/digit[i+1];
-            di=MyRemove(digit,di,i);
-            si=MyRemove(symbol,si,i);
+                if(ope == '-')
+                {
+                    sum -= temval;
+                }
         }
     }
-    for(int i=0;i<si;i++){
-        if(symbol[i]=='+'){
-            digit[i+1]=digit[i]+digit[i+1];
-            di=MyRemove(digit,di,i);
-            si=MyRemove(symbol,si,i);
-        }else if(symbol[i]=='-'){
-            digit[i+1]=digit[i]-digit[i+1];
-            di=MyRemove(digit,di,i);
-            si=MyRemove(symbol,si,i);
-        }
-    }
-    return digit[0];
-}
-
-
-int main()
-{
-    char str[11111],s1[999];
-
-    //2.3*((2+3)*3+1)+11
-    while(scanf("%s",s1)!=EOF){
-        //printf("-----%d\n",strlen(s1));
-        strcat(str,s1);
-    }
-    puts(str);
-    printf("%s = %lf\n",str,MyCalculate(str));
+    printf("\nè¡¨è¾¾å¼%sçš„å€¼ä¸º:%d\n",string,sum);
     return 0;
 }
