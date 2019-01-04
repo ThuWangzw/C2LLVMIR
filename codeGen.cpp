@@ -33,7 +33,12 @@ Value* CharExpAST::codeGen(Context* context){
 }
 
 Value* StringLiteralExpAST::codeGen(Context* context){
-    return context->builder.CreateGlobalString(this->value, "string");
+    GlobalVariable* value = context->builder.CreateGlobalString(this->value, "string");
+    std::vector<Value*> indices;
+    indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+    indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
+    auto ptr = context->builder.CreateInBoundsGEP(value,indices,"arrayPtr");
+    return ptr;
 }
 
 Value* BinaryOptExpAST::codeGen(Context* context) {
@@ -340,6 +345,7 @@ llvm::Value* IdentifierExpAST::codeGen(Context *context){
         //array type
         if(arrayPtr->getType() -> isArrayTy()){
             std::vector<Value*> indices;
+            indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
             indices.push_back(ConstantInt::get(Type::getInt32Ty(context->llvmContext),0,false));
             auto ptr = context->builder.CreateInBoundsGEP(t_value,indices,"arrayPtr");
             return ptr;
