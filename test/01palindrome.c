@@ -7,15 +7,15 @@ int main(){
     int n;
     int flag = 1;
     int zeroflag = 1;
-    for(i=0;i<100;i = i + 1)
-    {
-//        s[i] = '\0';
-        1;
-    }
-    //gets(s);
+//     for(i=0;i<100;i = i + 1)
+//     {
+// //        s[i] = '\0';
+//         // 1;
+//     }
+    gets(s);
     for(i=0;(i<100)&&(zeroflag);i = i + 1)
     {
-        if(1){
+        if(1 > 0){
             n = i;
             zeroflag = 0;
         }
@@ -29,8 +29,7 @@ int main(){
             puts("False");
         }
         if(i==j){
-            //printf("是回文串\n");
-            1;
+            puts("True");
         }
         i = i + 1;
         j = j - 1;

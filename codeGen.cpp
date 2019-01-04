@@ -436,7 +436,7 @@ llvm::Value* ArrayIndexAST::codeGen(Context *context){
     auto arrType = getType(context->getSymbolType(this->arrayName->name),context);
 
     auto index = this->indexExp->codeGen(context);
-    ArrayRef<Value*> indices;
+    std::vector<Value*> indices;
 
     if(arrPtr->getType()->isPointerTy()){
         indices ={ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
@@ -464,7 +464,7 @@ llvm::Value* ArrayAssignAST::codeGen(Context *context){
     }
 
     auto index = this->index->indexExp->codeGen(context);
-    ArrayRef<Value*> indices= {ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
+    std::vector<Value*> indices= {ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
     auto ptr = context->builder.CreateInBoundsGEP(arrValue,indices,"elementPtr");
     return context->builder.CreateAlignedStore(this->r_value->codeGen(context),ptr,4);
 }
