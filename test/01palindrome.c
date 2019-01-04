@@ -9,31 +9,31 @@ int main(){
     int zeroflag = 1;
     for(i=0;i<100;i = i + 1)
     {
-//        s[i] = '\0';
+        s[i] = '\0';
         1;
     }
-    //gets(s);
-//    for(i=0;(i<100)&&(zeroflag);i = i + 1)
-//    {
-//        if(1){
-//            n = i;
-//            zeroflag = 0;
-//        }
-//    }
+    gets(s);
+    for(i=0;(i<100)&&(zeroflag==1);i = i + 1)
+    {
+        if(s[i]=='\0'){
+            n = i;
+            zeroflag = 0;
+        }
+    }
     i=0;
-    j=2;
-//    while ((i<=j)&&flag) {
-//
-//        if(i==j){
-//            flag = 0;
-//            //printf("不是回文串\n");
-//        }
-//        if(i==j){
-//            //printf("是回文串\n");
-//            1;
-//        }
-//        i = i + 1;
-//        j = j - 1;
-//    }
+    j=n-1;
+    while ((i!=j)&&(flag == 1)) {
+
+        if(s[i]!=s[j]){
+            flag = 0;
+            puts("no");
+        }
+        if(i==j){
+            puts("yes");
+            1;
+        }
+        i = i + 1;
+        j = j - 1;
+    }
     return 0;
 }

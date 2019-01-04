@@ -161,13 +161,14 @@ union YYSTYPE
 	FunctionCallAST* function_call;
 	ArrayIndexAST* array_index;
 	VariableDecAST* var_dec;
+	GlobalVariableDecAST* glo_var_dec;
 	std::string* name;
 	int token;
 	std::vector<VariableDecAST*> *var_dec_list;
 	std::vector<ExpAST*> *call_list;
 	std::vector<AST*> *statement_list;
 
-#line 171 "y.tab.hpp" /* yacc.c:1909  */
+#line 172 "y.tab.hpp" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
