@@ -4,6 +4,7 @@ OBJS =  codeGen.o \
 		main.o	 \
 		AST.o   \
 
+
 LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cxxflags --ldflags`
 LIBS = `$(LLVMCONFIG) --system-libs --libs core`
@@ -32,4 +33,3 @@ output:
 	llvm-as output.ll
 	llc -filetype=obj output.bc
 	gcc output.o -o output.out
-	

@@ -1,6 +1,14 @@
 ; ModuleID = 'c model'
 source_filename = "c model"
 
+define i32 @f(i32 %a) {
+entry:
+  %0 = alloca i32
+  store i32 1, i32* %0
+  ret i32 0
+  ret i32 0
+}
+
 define i32 @main() {
 entry:
   %0 = alloca i32
@@ -21,6 +29,8 @@ else:                                             ; preds = %entry
 
 ifcont:                                           ; preds = %else, %2
   %iftmp = phi i32 [ 1, %2 ], [ -1, %else ]
-  ret i32 0
+  %arrayPtr1 = load i32, i32* %0
+  %3 = load i32, i32* %0
+  ret i32 %3
   ret i32 0
 }
