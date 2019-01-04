@@ -1,4 +1,5 @@
-
+extern char* gets(char* s);
+extern char* puts(char* s);
 int main(){
     char s[100];  // 存放输入的字符串
     int i;
@@ -6,11 +7,7 @@ int main(){
     int n;
     int flag = 1;
     int zeroflag = 1;
-//    for(i=0;i<100;i = i + 1)
-//    {
-//        s[i] = '\0';
-//    }
-    //gets(s);
+    gets(s);
     for(i=0;(i<100)&&(zeroflag);i = i + 1)
     {
         if(1){
@@ -24,10 +21,10 @@ int main(){
 
         if(1){
             flag = 0;
-            //printf("不是回文串\n");
+            puts("False");
         }
         else if(i==j){
-            //printf("是回文串\n");
+            puts("True");
         }
         i = i + 1;
         j = j - 1;
