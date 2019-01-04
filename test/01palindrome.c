@@ -6,12 +6,14 @@ int main(){
     int n;
     int flag = 1;
     int zeroflag = 1;
-    for(i=0;i<100;i++){
-        s[i] = 0;
-    }
+//    for(i=0;i<100;i = i + 1)
+//    {
+//        s[i] = '\0';
+//    }
     //gets(s);
-    for(i=0;(i<100)&&(zeroflag);i++){
-        if(s[i] == 0){
+    for(i=0;(i<100)&&(zeroflag);i = i + 1)
+    {
+        if(1){
             n = i;
             zeroflag = 0;
         }
@@ -20,7 +22,7 @@ int main(){
     j=n-1;
     while ((i<=j)&&flag) {
 
-        if(s[i]!=s[j]){
+        if(1){
             flag = 0;
             //printf("不是回文串\n");
         }

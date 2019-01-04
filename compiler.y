@@ -328,7 +328,7 @@ selection_statement:
 		BlockAST* if_stmt_block = new BlockAST();
 		if_stmt_block->addAST($5);
 		BlockAST* else_stmt_block = new BlockAST();
-		else_stmt_block->addAST($5);
+		else_stmt_block->addAST($7);
 		$$ = new IfExpAST($3, if_stmt_block, else_stmt_block);
 	}
 	;

@@ -1,9 +1,10 @@
-int a;
-int ff(int b){
-    b=0;
-    return 0;
-}
+
 int main(){
-    a = 1;
+    int a = 0;
+    if(1&&2){
+        a = 100;
+    } else{
+        a = 500;
+    }
     return 0;
 }
