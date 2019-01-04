@@ -33,6 +33,10 @@ Value* CharExpAST::codeGen(Context* context){
     return ConstantInt::get(Type::getInt8Ty(context->llvmContext), this->value, true);
 }
 
+Value* StringLiteralExpAST::codeGen(Context* context){
+    return context->builder.CreateGlobalString(this->value, "string");
+}
+
 Value* BinaryOptExpAST::codeGen(Context* context) {
     Value *L = this->LHS->codeGen(context);
     Value *R = this->RHS->codeGen(context);
@@ -64,6 +68,30 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
             return context->builder.CreateICmpSLE(L, R, "cmptmp");
         case BINARY_OPT_GE:
             return context->builder.CreateICmpSGE(L, R, "cmptmp");
+        case BINARY_OPT_LOGAND:{
+            //constant
+            IntExpAST* zero = new IntExpAST(0);
+            //else
+            BlockAST *elseb = new BlockAST(string("left"));
+            elseb->addAST(zero);
+            //R
+            BlockAST *rb = new BlockAST(string("right"));
+            rb->addAST(this->RHS);
+            IfExpAST *ifexp = new IfExpAST(this->LHS, rb, elseb);
+            return ifexp->codeGen(context);
+        }
+        case BINARY_OPT_LOGOR:{
+            //constant
+            IntExpAST* one = new IntExpAST(0);
+            //else
+            BlockAST *elseb = new BlockAST(string("left"));
+            elseb->addAST(one);
+            //R
+            BlockAST *rb = new BlockAST(string("right"));
+            rb->addAST(this->RHS);
+            IfExpAST *ifexp = new IfExpAST(this->LHS, elseb, rb);
+            return ifexp->codeGen(context);
+        }
         default:
             return LogErrorV("invalid binary operator");
     }
@@ -87,7 +115,7 @@ llvm::Function* FunctionDecAST::codeGen(Context* context){
         arg.setName(this->args[i].second);
         i++;
     }
-    if(res== nullptr){
+    if(!res){
         LogErrorV("declare error!!!");
         return nullptr;
     }
@@ -127,10 +155,14 @@ llvm::Function* FunctionDefAST::codeGen(Context* context){
 llvm::Value* BlockAST::codeGen(Context* context){
     //set var name and value
     Value* retval = nullptr;
+    context->blockstack.push_back(this);
+
     if(!this->bbCreated){
         if(this->func != nullptr){
             for (auto &Arg : this->func->args()){
-                this->symboltable[Arg.getName().data()] = &Arg;
+                IdentifierExpAST *idexp = new IdentifierExpAST(string(Arg.getName().data()));
+                VariableDecAST *vadec = new VariableDecAST(TYPE_INT, idexp);
+                this->stmsAndExps.insert(this->stmsAndExps.begin(), vadec);
             }
             this->bblock = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
             context->builder.SetInsertPoint(this->bblock);
@@ -143,7 +175,6 @@ llvm::Value* BlockAST::codeGen(Context* context){
     } else{
         context->builder.SetInsertPoint(this->bblock);
     }
-    context->blockstack.push_back(this);
 
     for(vector<AST*>::iterator iter = this->stmsAndExps.begin(); iter != this->stmsAndExps.end(); iter++){
         AST* now = *iter;
@@ -179,7 +210,7 @@ llvm::Value* IfExpAST::codeGen(Context* context){
     }
     //if cond
     CondV = context->builder.CreateICmpNE(
-            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "ifcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
     Function *TheFunction = context->builder.GetInsertBlock()->getParent();
     // Create blocks for the then and else cases.  Insert the 'then' block at the
     // end of the function.
@@ -247,7 +278,7 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){
@@ -280,7 +311,7 @@ llvm::Value* WhileExpAST::codeGen(Context* context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,Constant::getIntegerValue(getType(TYPE_INT, context),APInt(32,0,true)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){
@@ -325,6 +356,7 @@ llvm::Value* VariableAssignAST::codeGen(Context *context){
         return LogErrorV("Undeclared Variables");
     }
     Value* r_value = this -> rhs ->codeGen(context);
+
     context->builder.CreateStore(r_value,l_value);
     return l_value;
 }

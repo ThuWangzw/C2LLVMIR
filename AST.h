@@ -73,6 +73,22 @@ public:
     }
 };
 
+//StringLiteral
+class StringLiteralExpAST:public ExpAST{
+private:
+    std::string value;
+public:
+    StringLiteralExpAST(std::string t_value):value(t_value){}
+    ~StringLiteralExpAST(){}
+    virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "StringLiteral";
+        j["value"] = value;
+        return j;
+    }
+};
+
 class BinaryOptExpAST:public ExpAST{
 private:
     int value;//see BINARY_OPT_XXX
@@ -102,6 +118,7 @@ private:
     llvm::Function* func;
     bool bbCreated;
     llvm::BasicBlock* bblock;
+
 public:
     BlockAST():func(nullptr), bbCreated(false){}
     BlockAST(std::string str):blockName(str), func(nullptr), bbCreated(false){}
@@ -211,7 +228,7 @@ public:
         j["type"] = "IfExp";
         j["cond"] = Cond->generateJson();
         j["then"] = Then->generateJson();
-        j["else"] = Else->generateJson();
+        if (Else != nullptr) j["else"] = Else->generateJson();
         return j;
     }
 };
