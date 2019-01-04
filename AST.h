@@ -195,6 +195,7 @@ public:
     }
 };
 
+
 class IfExpAST:public StmAST{
 private:
     ExpAST* Cond;//needed
@@ -328,6 +329,23 @@ public:
     }
 };
 
+
+class GlobalVariableDecAST:public StmAST{
+public:
+    IdentifierExpAST *lhs;
+    ExpAST*rhs;
+    int type;
+    GlobalVariableDecAST(int t_type,IdentifierExpAST *t_lhs, ExpAST* t_rhs = nullptr):
+        lhs(t_lhs),rhs(t_rhs),type(t_type){}
+    virtual llvm::Value* codeGen(Context* context);
+    virtual json generateJson(){
+        json j;
+        j["type"] = "GlobalVarDec";
+        j["ident"] = lhs->generateJson();
+        if (rhs != nullptr) j["expr"] = rhs->generateJson();
+        return j;
+    }
+};
 
 //Array
 class ArrayIndexAST:public ExpAST{

@@ -1,9 +1,12 @@
-extern char* gets(char* s);
+//extern char* gets(char* s);
 
+int a = 2;
+int b;
+int c;
 int main()
 {
-    char a[100];
-    gets(a);
+    b = 2;
+    c = a + b;
     return 0;
     // return 0;
 }

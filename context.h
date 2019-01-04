@@ -33,7 +33,7 @@ public:
     }
     //add Symbol
     bool addSymbol(const std::string& t_name, llvm::Value* t_value){
-         return blockstack.back() -> addSymbol(t_name,t_value);
+        return blockstack.back() -> addSymbol(t_name,t_value);
     }
     int getSymbolType(std::string& t_name){
         for(auto it = blockstack.rbegin(); it != blockstack.rend(); it++ ){
@@ -48,6 +48,7 @@ public:
     }
     Context():builder(llvmContext), nowFunc(nullptr){
         this->theModule = llvm::make_unique<llvm::Module>("c model", this->llvmContext);
+        this->blockstack.push_back(new BlockAST());
     }
     ~Context(){}
 };

@@ -12,6 +12,7 @@ extern int yyparse();
 int main(int argc,char* argv[]){
     Context *ctx = new Context();
 
+
     yyin = fopen(argv[1],"r");
     yyparse();
     printf("\n=====\nParse Finished\n=====\n");

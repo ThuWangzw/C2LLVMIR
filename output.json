@@ -1,0 +1,106 @@
+{
+  "body": [
+    {
+      "ident": {
+        "arrayLength": 0,
+        "isArray": false,
+        "name": "a",
+        "type": "Identifier"
+      },
+      "type": "VarDec"
+    },
+    {
+      "ident": {
+        "arrayLength": 0,
+        "isArray": false,
+        "name": "b",
+        "type": "Identifier"
+      },
+      "type": "VarDec"
+    },
+    {
+      "ident": {
+        "arrayLength": 0,
+        "isArray": false,
+        "name": "c",
+        "type": "Identifier"
+      },
+      "type": "VarDec"
+    },
+    {
+      "body": {
+        "body": [
+          {
+            "expr": {
+              "type": "Int",
+              "value": 1
+            },
+            "ident": {
+              "arrayLength": 0,
+              "isArray": false,
+              "name": "a",
+              "type": "Identifier"
+            },
+            "type": "Assign"
+          },
+          {
+            "expr": {
+              "type": "Int",
+              "value": 2
+            },
+            "ident": {
+              "arrayLength": 0,
+              "isArray": false,
+              "name": "b",
+              "type": "Identifier"
+            },
+            "type": "Assign"
+          },
+          {
+            "expr": {
+              "left": {
+                "arrayLength": 0,
+                "isArray": false,
+                "name": "a",
+                "type": "Identifier"
+              },
+              "operator": 299,
+              "right": {
+                "arrayLength": 0,
+                "isArray": false,
+                "name": "b",
+                "type": "Identifier"
+              },
+              "type": "BinaryOptExp"
+            },
+            "ident": {
+              "arrayLength": 0,
+              "isArray": false,
+              "name": "c",
+              "type": "Identifier"
+            },
+            "type": "Assign"
+          },
+          {
+            "exp": {
+              "arrayLength": 0,
+              "isArray": false,
+              "name": "b",
+              "type": "Identifier"
+            },
+            "type": "ReturnExp"
+          }
+        ],
+        "type": "Block"
+      },
+      "dec": {
+        "args": null,
+        "name": "main",
+        "ret_type": 263,
+        "type": "FuncDec"
+      },
+      "type": "FuncDef"
+    }
+  ],
+  "type": "Block"
+}
