@@ -78,7 +78,8 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
             rb->addAST(this->RHS);
             IfExpAST *ifexp = new IfExpAST(this->LHS, rb, elseb);
             ifexp->setNeed(true);
-            return ifexp->codeGen(context);
+            Value* addcon = context->builder.CreateICmpNE(ifexp->codeGen(context),ConstantInt::get(context->llvmContext, APInt(32,0)), "ifcond");
+            return context->builder.CreateICmpNE(addcon,ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
         }
         case BINARY_OPT_LOGOR:{
             //constant
@@ -91,7 +92,8 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
             rb->addAST(this->RHS);
             IfExpAST *ifexp = new IfExpAST(this->LHS, elseb, rb);
             ifexp->setNeed(true);
-            return ifexp->codeGen(context);
+            Value* addcon = context->builder.CreateICmpNE(ifexp->codeGen(context),ConstantInt::get(context->llvmContext, APInt(32,0)), "ifcond");
+            return context->builder.CreateICmpNE(addcon,ConstantInt::get(context->llvmContext, APInt(1,0)), "ifcond");
         }
         default:
             return LogErrorV("invalid binary operator");
@@ -157,7 +159,9 @@ llvm::Value* BlockAST::codeGen(Context* context){
     //set var name and value
     Value* retval = nullptr;
     context->blockstack.push_back(this);
-
+    if(this->blockName.empty()){
+        this->blockName = "block";
+    }
     if(!this->bbCreated){
         if(this->func != nullptr){
             for (auto &Arg : this->func->args()){
@@ -257,7 +261,7 @@ llvm::Value* IfExpAST::codeGen(Context* context){
         PN->addIncoming(ElseV, elsebb);
         return PN;
     }
-    return nullptr;
+    return Constant::getNullValue(getType(TYPE_INT, context));;
 }
 
 llvm::Value* ForExpAST::codeGen(Context *context){
@@ -282,7 +286,7 @@ llvm::Value* ForExpAST::codeGen(Context *context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,ConstantInt::get(context->llvmContext, APInt(32,0)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){
@@ -315,7 +319,7 @@ llvm::Value* WhileExpAST::codeGen(Context* context){
     }
     Value* CondV = this->cond->codeGen(context);
     CondV = context->builder.CreateICmpNE(
-            CondV,ConstantInt::get(context->llvmContext, APInt(32,0)), "forcond");
+            CondV,ConstantInt::get(context->llvmContext, APInt(1,0)), "forcond");
     //choose cond
     context->builder.CreateCondBr(CondV, loop, AfterBB);
     if(!this->block->codeGen(context)){

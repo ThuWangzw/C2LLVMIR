@@ -1,10 +1,12 @@
 
 int main(){
-    int a = 0;
-    if(1&&2){
-        a = 100;
-    } else{
-        a = 500;
+//    char a[100];
+//    char b;
+//    char c;
+//    int d[100];
+    int a;
+    if(a==1){
+        a = 200;
     }
     return 0;
 }

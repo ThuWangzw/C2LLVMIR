@@ -94,6 +94,7 @@ private:
     int value;//see BINARY_OPT_XXX
     ExpAST* LHS;
     ExpAST* RHS;
+    int type;
 public:
     BinaryOptExpAST(int t_value,ExpAST* lhs, ExpAST* rhs):value(t_value),LHS(lhs),RHS(rhs){}
     ~BinaryOptExpAST(){}

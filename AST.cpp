@@ -56,6 +56,7 @@ void FunctionCallAST::addArg(ExpAST *arg){
 
 llvm::BasicBlock* BlockAST::BBCreate(Context* context){
     if(this->blockName.empty()){
+        std::cout<<"block no name warning";
         if(this->func== nullptr){
             this->bblock = BasicBlock::Create(context->llvmContext);
             this->bbCreated = true;

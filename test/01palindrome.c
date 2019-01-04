@@ -6,10 +6,11 @@ int main(){
     int n;
     int flag = 1;
     int zeroflag = 1;
-//    for(i=0;i<100;i = i + 1)
-//    {
+    for(i=0;i<100;i = i + 1)
+    {
 //        s[i] = '\0';
-//    }
+        1;
+    }
     //gets(s);
     for(i=0;(i<100)&&(zeroflag);i = i + 1)
     {
@@ -20,14 +21,15 @@ int main(){
     }
     i=0;
     j=n-1;
-    while ((i<=j)&&flag) {
+    while ((i<=j)||flag) {
 
-        if(1){
+        if(i==j){
             flag = 0;
             //printf("不是回文串\n");
         }
-        else if(i==j){
+        if(i==j){
             //printf("是回文串\n");
+            1;
         }
         i = i + 1;
         j = j - 1;
