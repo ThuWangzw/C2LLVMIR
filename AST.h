@@ -125,6 +125,7 @@ public:
     BlockAST():func(nullptr), bbCreated(false){}
     BlockAST(std::string str):blockName(str), func(nullptr), bbCreated(false){}
     ~BlockAST(){}
+    std::vector<VariableDecAST*>* origin_arg;
     bool addAST(AST* one);
     bool addSymbol(const std::string&, llvm::Value*);
     bool setSymbolType(const std::string&, int);
@@ -181,6 +182,7 @@ private:
     FunctionDecAST *declare;//needed
     BlockAST *body;//needed
 public:
+    std::vector<VariableDecAST*>* getfuncArgvec(){ return declare->args_dec;}
     FunctionDefAST(){}
     FunctionDefAST(FunctionDecAST* tdec, BlockAST* tblo):declare(tdec), body(tblo){}
     ~FunctionDefAST(){}
@@ -341,6 +343,7 @@ public:
     IdentifierExpAST* lhs;
     ExpAST* rhs;
     int type;
+    std::string& getname(){ return this->lhs->name;}
     VariableDecAST(int t_type, IdentifierExpAST* t_lhs,ExpAST* t_rhs = nullptr):
         lhs(t_lhs),rhs(t_rhs),type(t_type){}
     virtual llvm::Value* codeGen(Context* context);

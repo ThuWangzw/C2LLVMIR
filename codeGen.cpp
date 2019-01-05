@@ -150,7 +150,9 @@ llvm::Function* FunctionDefAST::codeGen(Context* context){
     //add block
     this->body->setName("entry");
     this->body->setFunc(func);
+    this->body->origin_arg = this->getfuncArgvec();
     Value* retres = this->body->codeGen(context);
+    return func;
     if(retres){
         IntExpAST* retval = new IntExpAST(0);
         ReturnExpAST* retexp = new ReturnExpAST(retval);
@@ -172,14 +174,17 @@ llvm::Value* BlockAST::codeGen(Context* context){
     }
     if(!this->bbCreated){
         if(this->func != nullptr){
-            for (auto &Arg : this->func->args()){
-                IdentifierExpAST *idexp = new IdentifierExpAST(string(Arg.getName().data()));
-                VariableDecAST *vadec = new VariableDecAST(TYPE_INT, idexp);
-                this->stmsAndExps.insert(this->stmsAndExps.begin(), vadec);
-            }
             this->bblock = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
             context->builder.SetInsertPoint(this->bblock);
-            //cout<< this->blockName <<"func not null"<<endl;
+
+            int i = 0;
+            Value* argAlloc;
+            for(auto &ir_arg_it: this->func->args()){
+                ir_arg_it.setName((*origin_arg)[i]->lhs->getName());
+                argAlloc = (*origin_arg)[i]->codeGen(context);
+                context->builder.CreateStore(&ir_arg_it, argAlloc, false);
+                i++;
+            }
         } else{
             //Function* tmp = context->builder.GetInsertBlock()->getParent();
             this->bblock = BasicBlock::Create(context->llvmContext, this->blockName, context->nowFunc);
@@ -405,7 +410,7 @@ llvm::Value* VariableDecAST::codeGen(Context *context){
         inst = context->builder.CreateAlloca(arrayType,arraySizeValue,"arraytmp");
     }
     else{
-        inst = context->builder.CreateAlloca(tp);
+        inst = context->builder.CreateAlloca(tp, nullptr, this->lhs->name);
     }
     context->addSymbol(this->lhs->name,inst);
     context->setSymbolType(this->lhs->name,this->type);
