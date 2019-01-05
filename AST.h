@@ -147,11 +147,12 @@ public:
 class FunctionDecAST:public StmAST{
 private:
     std::string name;
+    int isExtern;
     int ret;//return value type
     std::vector<std::pair<int,std::string>> args;//first type, second name
     friend class FunctionDefAST;
 public:
-    FunctionDecAST(){}
+    FunctionDecAST(int t_extern):isExtern(t_extern){}
     virtual llvm::Function *codeGen(Context* context);
     void setName(std::string tname);
     void setType(int tret);

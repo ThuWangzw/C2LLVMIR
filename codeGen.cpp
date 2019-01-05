@@ -117,7 +117,9 @@ llvm::Function* FunctionDecAST::codeGen(Context* context){
     Type *rettype;
     rettype = getType(this->ret,context);
     //create func
-    FunctionType *FT = FunctionType::get(rettype, argtypes, false);
+    FunctionType *FT;
+    if (this->isExtern) FT = FunctionType::get(rettype, argtypes, true);
+    else FT = FunctionType::get(rettype, argtypes, false);
     Function* res =Function::Create(FT, Function::ExternalLinkage, this->name, context->theModule.get());
     int i = 0;
     for(auto &arg:res->args()){
@@ -201,8 +203,8 @@ llvm::Value* FunctionCallAST::codeGen(Context* context){
     if (!CalleeF)
         return LogErrorV("Unknown function referenced");
     // If argument mismatch error.
-    if (CalleeF->arg_size() != this->args.size())
-        return LogErrorV("Incorrect # arguments passed");
+    // if (CalleeF->arg_size() != this->args.size())
+        // return LogErrorV("Incorrect # arguments passed");
     std::vector<Value *> ArgsV;
     for (unsigned i = 0, e = this->args.size(); i != e; ++i) {
         ArgsV.push_back(this->args[i]->codeGen(context));
