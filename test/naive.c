@@ -18,17 +18,11 @@ int func(){
 
 int main()
 {
-    // bug 1
-    // a = 0; b = 1;
-    // if ((a == 0) || (b == 0)) {
-    //     puts("lalalalal");
-    //     s[10] = 9;
-    // }
+    a = 0; b = 1;
+    if ((a == 0) || (b == 0)) {
+        puts("lalalalal");
+        s[10] = 9;
+    }
 
-    // bug 2
-    puts("请输入表达式");
-    printf("后缀表达式为:");
-    gets(str);
-    func();
     return 0;
 }

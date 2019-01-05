@@ -22,16 +22,12 @@ int push_post(char c) { postfix[post_index] = c; post_index = post_index + 1; re
 
 int lower_than_plus(char s){
     int res = 0;
-    if (s == '#') {res = 1;}
-    if (s == '(') {res = 1;}
+    if (s == '#' || s == '(') {res = 1;}
     return res;
 }
 int lower_than_mul(char s){
     int res = 0;
-    if (s == '#') {res = 1;}
-    if (s == '(') {res = 1;}
-    if (s == '+') {res = 1;}
-    if (s == '-') {res = 1;}
+    if (s == '#' || s == '(' || s == '+' || s == '-') {res = 1;}
     return res;
 }
 int get_num(char s){
@@ -59,7 +55,7 @@ int toPostfix() {
                 else { pop_char(); push_post(c); }
             }
         }
-        if (str[i] == '+') {
+        if (str[i] == '+' || str[i] == '-') {
             flag = 1;
             while (flag > 0) {
                 c = get_top_char();
@@ -68,25 +64,7 @@ int toPostfix() {
             }
             push_char(str[i]);
         }
-        if (str[i] == '-'){
-            flag = 1;
-            while (flag > 0) {
-                c = get_top_char();
-                if (lower_than_plus(c) > 0) { flag = 0; }
-                else { pop_char(); push_post(c); }
-            }
-            push_char(str[i]);
-        }
-        if (str[i] == '*'){
-            flag = 1;
-            while (flag > 0) {
-                c = get_top_char();
-                if (lower_than_mul(c) > 0) { flag = 0; }
-                else { pop_char(); push_post(c); }
-            }
-            push_char(str[i]);
-        }
-        if (str[i] == '/'){
+        if (str[i] == '*' || str[i] == '/'){
             flag = 1;
             while (flag > 0) {
                 c = get_top_char();
@@ -104,12 +82,11 @@ int toPostfix() {
 }
 
 int calculate() {
-    int i; int left; int right; int len; int result; int zero_flag = 1;
+    int i; int left; int right; int len; int result; int zero_flag = 0;
     num_top = 0;
     while(postfix[len] > '\0') { len = len + 1; }
 
     for (i = 0; zero_flag == 0 && i < len; i = i + 1) {
-        puts("lalal");
         if (postfix[i] >= '0' && postfix[i] <= '9'){
             push_int(get_num(postfix[i]));
         }
