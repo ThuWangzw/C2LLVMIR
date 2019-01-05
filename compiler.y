@@ -10,6 +10,7 @@
 
 	extern int yylex(void);
 	void yyerror(const char*);
+	char getEscapeChar(char c); 
 %}
 %union{
 	BlockAST* block;
@@ -102,9 +103,10 @@ function_declaration:
 	EXTERN type_specifier identifier LPAREN func_decl_arguments RPAREN SEMICOLON{
 		/* AS: extern int printf(char* format); */
 		/* add a field to tell whether it is extern*/
-		$$ = new FunctionDecAST();
+		$$ = new FunctionDecAST(1);
 		$$->setName($3->getName());
 		$$->setType($2);
+		$$->setArgsDec($5);
 		for (auto p = $5->begin(); p != $5->end(); p++) {
 			$$->addArg((*p)->type, (*p)->lhs->name);
 		}
@@ -114,9 +116,10 @@ function_declaration:
 function_definition:
 	type_specifier identifier LPAREN func_decl_arguments RPAREN compound_statement {
 		/* AS: int func(int a, char b){...} */
-		FunctionDecAST* func_dec = new FunctionDecAST();
+		FunctionDecAST* func_dec = new FunctionDecAST(0);
 		func_dec->setName($2->getName());
 		func_dec->setType($1);
+		func_dec->setArgsDec($4);
 		for (auto p = $4->begin(); p != $4->end(); p++) {
 			func_dec->addArg((*p)->type, (*p)->lhs->name);
 		}
@@ -169,7 +172,11 @@ primary_expression:
 			if (start == 0 && (*$1)[i] == '"') start = 1;
 			else if (start == 1 && (*$1)[i] == '"') break;
 			else if (start == 1){
-				result.push_back((*$1)[i]);
+				if ((*$1)[i] == '\\' && i + 1 < length){
+					result.push_back(getEscapeChar((*$1)[i+1]));
+					i++;
+				}
+				else result.push_back((*$1)[i]);
 			}
 		}
 		$$ = new StringLiteralExpAST(result);
@@ -402,6 +409,21 @@ void yyerror(const char *s)
 {
 	fflush(stdout);
 	printf("\n%*s\n%*s\n", column, "^", column, s);
+}
+
+char getEscapeChar(char c){
+	char res;
+	switch(c){
+		case 't':
+			res = '\t';break;
+		case '0':
+			res = 0;break;
+		case 'n':
+			res = '\n';break;
+		default:
+			res = 0;break;
+	}
+	return res;
 }
 
 // int main(int argc,char* argv[]) {

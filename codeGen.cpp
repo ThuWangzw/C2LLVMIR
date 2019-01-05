@@ -89,7 +89,7 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
         }
         case BINARY_OPT_LOGOR:{
             //constant
-            IntExpAST* one = new IntExpAST(0);
+            IntExpAST* one = new IntExpAST(1);
             //else
             BlockAST *elseb = new BlockAST(string("left"));
             elseb->addAST(one);
@@ -117,7 +117,9 @@ llvm::Function* FunctionDecAST::codeGen(Context* context){
     Type *rettype;
     rettype = getType(this->ret,context);
     //create func
-    FunctionType *FT = FunctionType::get(rettype, argtypes, false);
+    FunctionType *FT;
+    if (this->isExtern) FT = FunctionType::get(rettype, argtypes, true);
+    else FT = FunctionType::get(rettype, argtypes, false);
     Function* res =Function::Create(FT, Function::ExternalLinkage, this->name, context->theModule.get());
     int i = 0;
     for(auto &arg:res->args()){
@@ -148,7 +150,9 @@ llvm::Function* FunctionDefAST::codeGen(Context* context){
     //add block
     this->body->setName("entry");
     this->body->setFunc(func);
+    this->body->origin_arg = this->getfuncArgvec();
     Value* retres = this->body->codeGen(context);
+    return func;
     if(retres){
         IntExpAST* retval = new IntExpAST(0);
         ReturnExpAST* retexp = new ReturnExpAST(retval);
@@ -170,14 +174,17 @@ llvm::Value* BlockAST::codeGen(Context* context){
     }
     if(!this->bbCreated){
         if(this->func != nullptr){
-            for (auto &Arg : this->func->args()){
-                IdentifierExpAST *idexp = new IdentifierExpAST(string(Arg.getName().data()));
-                VariableDecAST *vadec = new VariableDecAST(TYPE_INT, idexp);
-                this->stmsAndExps.insert(this->stmsAndExps.begin(), vadec);
-            }
             this->bblock = BasicBlock::Create(context->llvmContext, this->blockName, this->func);
             context->builder.SetInsertPoint(this->bblock);
-            //cout<< this->blockName <<"func not null"<<endl;
+
+            int i = 0;
+            Value* argAlloc;
+            for(auto &ir_arg_it: this->func->args()){
+                ir_arg_it.setName((*origin_arg)[i]->lhs->getName());
+                argAlloc = (*origin_arg)[i]->codeGen(context);
+                context->builder.CreateStore(&ir_arg_it, argAlloc, false);
+                i++;
+            }
         } else{
             //Function* tmp = context->builder.GetInsertBlock()->getParent();
             this->bblock = BasicBlock::Create(context->llvmContext, this->blockName, context->nowFunc);
@@ -201,8 +208,8 @@ llvm::Value* FunctionCallAST::codeGen(Context* context){
     if (!CalleeF)
         return LogErrorV("Unknown function referenced");
     // If argument mismatch error.
-    if (CalleeF->arg_size() != this->args.size())
-        return LogErrorV("Incorrect # arguments passed");
+    // if (CalleeF->arg_size() != this->args.size())
+        // return LogErrorV("Incorrect # arguments passed");
     std::vector<Value *> ArgsV;
     for (unsigned i = 0, e = this->args.size(); i != e; ++i) {
         ArgsV.push_back(this->args[i]->codeGen(context));
@@ -403,7 +410,7 @@ llvm::Value* VariableDecAST::codeGen(Context *context){
         inst = context->builder.CreateAlloca(arrayType,arraySizeValue,"arraytmp");
     }
     else{
-        inst = context->builder.CreateAlloca(tp);
+        inst = context->builder.CreateAlloca(tp, nullptr, this->lhs->name);
     }
     context->addSymbol(this->lhs->name,inst);
     context->setSymbolType(this->lhs->name,this->type);
@@ -426,7 +433,10 @@ llvm::Value* GlobalVariableDecAST::codeGen(Context* context){
         auto arrayType = ArrayType::get(tp,this->lhs->arrayLength);
         inst = new GlobalVariable(*context->theModule,arrayType,false,llvm::GlobalValue::CommonLinkage,0,this->lhs->name);
         inst -> setAlignment(4);
-        auto init_value = ConstantArray::get(arrayType,0);
+        std::vector<Constant *> init_ref;
+        for (int i = 0; i < this->lhs->arrayLength; i++)
+            init_ref.push_back(ConstantInt::get(tp, 0, true));
+        auto init_value = ConstantArray::get(arrayType,init_ref);
         inst -> setInitializer(init_value);
     }
     else{
@@ -473,6 +483,7 @@ llvm::Value* ArrayAssignAST::codeGen(Context *context){
     }
 
     auto arrPtr = context->builder.CreateLoad(arrValue,"arrayPtr");
+    auto arrType = getType(context->getSymbolType(this->index->arrayName->name),context);
     
     if(!arrPtr->getType()->isArrayTy() && !arrPtr->getType()->isPointerTy()){
         return LogErrorV("Variable is not Array");

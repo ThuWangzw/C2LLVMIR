@@ -13,6 +13,7 @@ using json = nlohmann::json;
 
 class Context;
 class FunctionDefAST;
+class VariableDecAST;
 llvm::Type*  getType(int typeidt, Context* context);
 
 class AST{
@@ -124,6 +125,7 @@ public:
     BlockAST():func(nullptr), bbCreated(false){}
     BlockAST(std::string str):blockName(str), func(nullptr), bbCreated(false){}
     ~BlockAST(){}
+    std::vector<VariableDecAST*>* origin_arg;
     bool addAST(AST* one);
     bool addSymbol(const std::string&, llvm::Value*);
     bool setSymbolType(const std::string&, int);
@@ -147,15 +149,18 @@ public:
 class FunctionDecAST:public StmAST{
 private:
     std::string name;
+    int isExtern;
     int ret;//return value type
     std::vector<std::pair<int,std::string>> args;//first type, second name
+    std::vector<VariableDecAST*>* args_dec;
     friend class FunctionDefAST;
 public:
-    FunctionDecAST(){}
+    FunctionDecAST(int t_extern):isExtern(t_extern){}
     virtual llvm::Function *codeGen(Context* context);
     void setName(std::string tname);
     void setType(int tret);
     void addArg(int rettype, std::string name);
+    void setArgsDec(std::vector<VariableDecAST*>* t_dec){ args_dec = t_dec;}
     virtual json generateJson(){
         json j;
         j["type"] = "FuncDec";
@@ -177,6 +182,7 @@ private:
     FunctionDecAST *declare;//needed
     BlockAST *body;//needed
 public:
+    std::vector<VariableDecAST*>* getfuncArgvec(){ return declare->args_dec;}
     FunctionDefAST(){}
     FunctionDefAST(FunctionDecAST* tdec, BlockAST* tblo):declare(tdec), body(tblo){}
     ~FunctionDefAST(){}
@@ -337,6 +343,7 @@ public:
     IdentifierExpAST* lhs;
     ExpAST* rhs;
     int type;
+    std::string& getname(){ return this->lhs->name;}
     VariableDecAST(int t_type, IdentifierExpAST* t_lhs,ExpAST* t_rhs = nullptr):
         lhs(t_lhs),rhs(t_rhs),type(t_type){}
     virtual llvm::Value* codeGen(Context* context);
