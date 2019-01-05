@@ -89,7 +89,7 @@ Value* BinaryOptExpAST::codeGen(Context* context) {
         }
         case BINARY_OPT_LOGOR:{
             //constant
-            IntExpAST* one = new IntExpAST(0);
+            IntExpAST* one = new IntExpAST(1);
             //else
             BlockAST *elseb = new BlockAST(string("left"));
             elseb->addAST(one);
