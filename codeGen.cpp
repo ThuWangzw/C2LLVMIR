@@ -469,6 +469,7 @@ llvm::Value* ArrayIndexAST::codeGen(Context *context){
     else{
         return LogErrorV("The Variable is not array");
     }
+    // auto ptr = context->builder.CreateInBoundsGEP(arrType, arrPtr,indices,"elementPtr");
     auto ptr = context->builder.CreateInBoundsGEP(arrPtr,indices,"elementPtr");
     return context->builder.CreateAlignedLoad(ptr,4);
 }
@@ -483,6 +484,7 @@ llvm::Value* ArrayAssignAST::codeGen(Context *context){
     }
 
     auto arrPtr = context->builder.CreateLoad(arrValue,"arrayPtr");
+    auto arrType = getType(context->getSymbolType(this->index->arrayName->name),context);
     
     if(!arrPtr->getType()->isArrayTy() && !arrPtr->getType()->isPointerTy()){
         return LogErrorV("Variable is not Array");
@@ -490,6 +492,7 @@ llvm::Value* ArrayAssignAST::codeGen(Context *context){
 
     auto index = this->index->indexExp->codeGen(context);
     std::vector<Value*> indices= {ConstantInt::get(Type::getInt64Ty(context->llvmContext),0),index };
+    // auto ptr = context->builder.CreateInBoundsGEP(arrType, arrValue,indices,"elementPtr");
     auto ptr = context->builder.CreateInBoundsGEP(arrValue,indices,"elementPtr");
     return context->builder.CreateAlignedStore(this->r_value->codeGen(context),ptr,4);
 }

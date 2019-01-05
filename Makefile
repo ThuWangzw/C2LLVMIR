@@ -32,4 +32,4 @@ compiler: lex yacc $(OBJS)
 output:
 	llvm-as output.ll
 	llc -filetype=obj output.bc
-	gcc output.o -o output.out -no-pie
+	gcc output.o -o output.out

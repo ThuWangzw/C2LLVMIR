@@ -2,22 +2,33 @@ extern char* gets(char* s);
 extern char* puts(char* s);
 extern int printf(char *s);
 
-int max(int a, int b) {
-    int ans;
-    if (a > b) { ans = a; }
-    else {ans = b;}
-    return ans;
+// bug report here
+int a = 0; int b = 1;
+int s[100];
+char str[100];
+
+int func(){
+    int i = 0; int len;
+    while(str[len] > '\0') {len = len + 1;}
+    for (i = 0; i < len; i = i + 1) {
+        puts("lalalalal");
+    }
+    return 0;
 }
 
 int main()
 {
-    // a = 10;
-    // char b[100];
-    int ans;
-    ans = max(1, 0);
-    // a = 't';
-    printf("result %d", ans);
-    // gets(b);
-    // puts(b);
+    // bug 1
+    // a = 0; b = 1;
+    // if ((a == 0) || (b == 0)) {
+    //     puts("lalalalal");
+    //     s[10] = 9;
+    // }
+
+    // bug 2
+    puts("请输入表达式");
+    printf("后缀表达式为:");
+    gets(str);
+    func();
     return 0;
 }
