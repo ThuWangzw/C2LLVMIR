@@ -13,6 +13,7 @@ using json = nlohmann::json;
 
 class Context;
 class FunctionDefAST;
+class VariableDecAST;
 llvm::Type*  getType(int typeidt, Context* context);
 
 class AST{
@@ -150,6 +151,7 @@ private:
     int isExtern;
     int ret;//return value type
     std::vector<std::pair<int,std::string>> args;//first type, second name
+    std::vector<VariableDecAST*>* args_dec;
     friend class FunctionDefAST;
 public:
     FunctionDecAST(int t_extern):isExtern(t_extern){}
@@ -157,6 +159,7 @@ public:
     void setName(std::string tname);
     void setType(int tret);
     void addArg(int rettype, std::string name);
+    void setArgsDec(std::vector<VariableDecAST*>* t_dec){ args_dec = t_dec;}
     virtual json generateJson(){
         json j;
         j["type"] = "FuncDec";

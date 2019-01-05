@@ -106,6 +106,7 @@ function_declaration:
 		$$ = new FunctionDecAST(1);
 		$$->setName($3->getName());
 		$$->setType($2);
+		$$->setArgsDec($5);
 		for (auto p = $5->begin(); p != $5->end(); p++) {
 			$$->addArg((*p)->type, (*p)->lhs->name);
 		}
@@ -118,6 +119,7 @@ function_definition:
 		FunctionDecAST* func_dec = new FunctionDecAST(0);
 		func_dec->setName($2->getName());
 		func_dec->setType($1);
+		func_dec->setArgsDec($4);
 		for (auto p = $4->begin(); p != $4->end(); p++) {
 			func_dec->addArg((*p)->type, (*p)->lhs->name);
 		}
