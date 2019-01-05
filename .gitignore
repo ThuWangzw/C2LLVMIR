@@ -9,3 +9,12 @@ test.*
 *.ll
 *.output
 *.bc
+
+# yacc
+y.tab.cpp
+y.tab.hpp
+# lex
+lex.yy.cpp
+
+# syntax graph
+output.json
