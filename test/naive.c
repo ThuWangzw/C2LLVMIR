@@ -2,12 +2,21 @@ extern char* gets(char* s);
 extern char* puts(char* s);
 extern int printf(char *s);
 
+int max(int a, int b) {
+    int ans;
+    if (a > b) { ans = a; }
+    else {ans = b;}
+    return ans;
+}
+
 int main()
 {
-    int a[100];
+    // a = 10;
     // char b[100];
-    a[10] = 10;
-    printf("lalalla %d\ncaoni\nmade\nlal\nssss\nsss", a[10]);
+    int ans;
+    ans = max(1, 0);
+    // a = 't';
+    printf("result %d", ans);
     // gets(b);
     // puts(b);
     return 0;

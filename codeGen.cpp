@@ -428,7 +428,10 @@ llvm::Value* GlobalVariableDecAST::codeGen(Context* context){
         auto arrayType = ArrayType::get(tp,this->lhs->arrayLength);
         inst = new GlobalVariable(*context->theModule,arrayType,false,llvm::GlobalValue::CommonLinkage,0,this->lhs->name);
         inst -> setAlignment(4);
-        auto init_value = ConstantArray::get(arrayType,0);
+        std::vector<Constant *> init_ref;
+        for (int i = 0; i < this->lhs->arrayLength; i++)
+            init_ref.push_back(ConstantInt::get(tp, 0, true));
+        auto init_value = ConstantArray::get(arrayType,init_ref);
         inst -> setInitializer(init_value);
     }
     else{
