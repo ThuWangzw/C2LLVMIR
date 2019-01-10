@@ -82,7 +82,7 @@ int toPostfix() {
 }
 
 int calculate() {
-    int i; int left; int right; int len; int result; int zero_flag = 0;
+    int i; int left; int right; int len = 0; int result; int zero_flag = 0;
     num_top = 0;
     while(postfix[len] > '\0') { len = len + 1; }
 
